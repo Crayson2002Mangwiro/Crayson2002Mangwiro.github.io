@@ -2,7 +2,7 @@
    PENSION FUND DIGITAL TWIN — ZIMBABWE (Enhanced v2)
    Full Simulation Engine with ZAPF Competition Features
    Live RBZ / IOBZ data, Draggable Output, IPEC Inline
-   v2.1 - Groq Migration & Dynamic Date Sync
+   v2.2 - Deployment Cache Bust & Fix
    ================================================ */
 (function () {
   'use strict';
