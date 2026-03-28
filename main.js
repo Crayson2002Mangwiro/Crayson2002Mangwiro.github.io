@@ -1686,7 +1686,7 @@
   setTimeout(fetchLiveRates, 800);
 
   // ═══════════════════════════════════════════════
-  // ZAPF AI CHATBOT LOGIC (Gemini API)
+  // ZAPF AI CHATBOT LOGIC (Gemini API with Context)
   // ═══════════════════════════════════════════════
   const aiFab = $('zapf-ai-fab');
   const aiWindow = $('zapf-ai-window');
@@ -1695,10 +1695,7 @@
   const aiInput = $('zapf-ai-input');
   const aiSend = $('zapf-ai-send');
 
-  const gk1 = 'AIzaSyCId3';
-  const gk2 = '8eFi3Qfe7E';
-  const gk3 = 'xVB9pQwrUD8YcjX3SzQ';
-  const GEMINI_API_KEY = gk1 + gk2 + gk3;
+  const API_KEY = 'AIzaSyAzW-X-lZPo0KqG4FUapuQUtdKVEGnrKlg';
 
   let aiHistory = [];
 
@@ -1729,31 +1726,44 @@
     return msgDiv;
   }
 
+  function getSimulationContext() {
+    return `Current Simulation State:
+- Status: ${$('status-state') ? $('status-state').textContent : 'Idle'}
+- Fund Balance: ${$('status-balance') ? $('status-balance').textContent : '$0'}
+- Monthly Payout: ${$('status-payout') ? $('status-payout').textContent : '$0'}
+- Inflation: ${$('status-inflation') ? $('status-inflation').textContent : '0%'}
+- Funding Ratio: ${$('status-funding-ratio') ? $('status-funding-ratio').textContent : '-'}
+- Years to Depletion: ${$('status-depletion') ? $('status-depletion').textContent : '-'}
+- IPEC Status: ${$('canvas-ipec-status') ? $('canvas-ipec-status').textContent : '-'}`;
+  }
+
   async function handleSend() {
     if (!aiInput || !aiMessages) return;
     const text = aiInput.value.trim();
     if (!text) return;
 
     addMessageToUI('user', text);
+    // Add User message to history
     aiHistory.push({ role: 'user', parts: [{ text: text }] });
     aiInput.value = '';
 
     const loadingMsg = addMessageToUI('ai', 'Thinking...');
 
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      const systemPrompt = `You are ZAPF AI, a knowledgeable and professional assistant for the Pension Fund Digital Twin dashboard. You specialize in Zimbabwe pensions, ZiG, hyperinflation, and IPEC regulations.
+Always provide concise, clear, and professional answers.
+The user is currently running a simulation. Here is the LIVE data from their dashboard. Use this data if they ask about their simulation:
+${getSimulationContext()}`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: 'You are ZAPF AI, a knowledgeable and professional assistant for the Pension Fund Digital Twin dashboard. You specialize in Zimbabwe pensions, ZiG currency, hyperinflation modeling, RBZ guidelines, and IPEC regulations. Give concise, extremely clear, and professional answers.' }]
-          },
+          systemInstruction: { parts: [{ text: systemPrompt }] },
           contents: aiHistory,
-          generationConfig: {
-            temperature: 0.7
-          }
+          generationConfig: { temperature: 0.7 }
         })
       });
 
@@ -1763,7 +1773,10 @@
       if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
         const aiResponse = data.candidates[0].content.parts[0].text;
         addMessageToUI('ai', aiResponse);
+        // Add Assistant message to history
         aiHistory.push({ role: 'model', parts: [{ text: aiResponse }] });
+      } else if (data.error && data.error.message) {
+        addMessageToUI('ai', `API Error [${data.error.code}]: ${data.error.message}`);
       } else {
         addMessageToUI('ai', 'Sorry, I received an invalid response format from the AI provider.');
       }
@@ -1773,7 +1786,7 @@
       if (loadingMsg && loadingMsg.parentNode) {
         aiMessages.removeChild(loadingMsg);
       }
-      addMessageToUI('ai', 'Sorry, I encountered a network error connecting to the AI service.');
+      addMessageToUI('ai', 'Sorry, I encountered an error connecting to the AI service.');
     }
   }
 
