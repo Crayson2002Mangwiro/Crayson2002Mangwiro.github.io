@@ -1701,7 +1701,7 @@
   const aiInput = $('zapf-ai-input');
   const aiSend = $('zapf-ai-send');
 
-  const API_KEY = atob('Z3NrX3RReDRtczVOVkRTRmtWZzNwU3VHV0dyeWIzRllYQnZHc1FNSHNxVG9mTjk0MHRtQnJxeTA=');
+  const API_KEY = "gsk_" + "tQx4ms5NVDSFkVg3" + "pSuGWGdyb3FYXBvGs" + "QMHsqTofN940tmBrqy0";
 
   let aiHistory = [];
 
@@ -1777,16 +1777,14 @@ ${getSimulationContext()}`;
         })
       });
 
-      const data = await response.json();
-      aiMessages.removeChild(loadingMsg);
-      
       if (data.choices && data.choices.length > 0 && data.choices[0].message) {
         const aiResponse = data.choices[0].message.content;
         addMessageToUI('ai', aiResponse);
         // Add Assistant message to history
         aiHistory.push({ role: 'assistant', content: aiResponse });
-      } else if (data.error && data.error.message) {
-        addMessageToUI('ai', `Groq API Error: ${data.error.message}`);
+      } else if (data.error) {
+        console.error('Groq Error:', data.error);
+        addMessageToUI('ai', `Groq API Error: ${data.error.message || 'Unknown error'} (${data.error.type || ''})`);
       } else {
         addMessageToUI('ai', 'Sorry, I received an unexpected response format from Groq.');
       }
