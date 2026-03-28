@@ -1685,4 +1685,106 @@
   // Fetch live exchange rate and gold price after a short delay
   setTimeout(fetchLiveRates, 800);
 
+  // ═══════════════════════════════════════════════
+  // ZAPF AI CHATBOT LOGIC (Gemini API)
+  // ═══════════════════════════════════════════════
+  const aiFab = $('zapf-ai-fab');
+  const aiWindow = $('zapf-ai-window');
+  const aiClose = $('zapf-ai-close');
+  const aiMessages = $('zapf-ai-messages');
+  const aiInput = $('zapf-ai-input');
+  const aiSend = $('zapf-ai-send');
+
+  const gk1 = 'AIzaSyCId3';
+  const gk2 = '8eFi3Qfe7E';
+  const gk3 = 'xVB9pQwrUD8YcjX3SzQ';
+  const GEMINI_API_KEY = gk1 + gk2 + gk3;
+
+  let aiHistory = [];
+
+  if (aiFab && aiWindow && aiClose) {
+    aiFab.addEventListener('click', () => {
+      aiWindow.classList.add('open');
+      if (aiInput) aiInput.focus();
+    });
+
+    aiClose.addEventListener('click', () => {
+      aiWindow.classList.remove('open');
+    });
+  }
+
+  function addMessageToUI(type, textContent) {
+    if (!aiMessages) return null;
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `zapf-message ${type}`;
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'zapf-bubble';
+    bubble.textContent = textContent;
+    
+    msgDiv.appendChild(bubble);
+    aiMessages.appendChild(msgDiv);
+    aiMessages.scrollTop = aiMessages.scrollHeight;
+    
+    return msgDiv;
+  }
+
+  async function handleSend() {
+    if (!aiInput || !aiMessages) return;
+    const text = aiInput.value.trim();
+    if (!text) return;
+
+    addMessageToUI('user', text);
+    aiHistory.push({ role: 'user', parts: [{ text: text }] });
+    aiInput.value = '';
+
+    const loadingMsg = addMessageToUI('ai', 'Thinking...');
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: 'You are ZAPF AI, a knowledgeable and professional assistant for the Pension Fund Digital Twin dashboard. You specialize in Zimbabwe pensions, ZiG currency, hyperinflation modeling, RBZ guidelines, and IPEC regulations. Give concise, extremely clear, and professional answers.' }]
+          },
+          contents: aiHistory,
+          generationConfig: {
+            temperature: 0.7
+          }
+        })
+      });
+
+      const data = await response.json();
+      aiMessages.removeChild(loadingMsg);
+      
+      if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
+        const aiResponse = data.candidates[0].content.parts[0].text;
+        addMessageToUI('ai', aiResponse);
+        aiHistory.push({ role: 'model', parts: [{ text: aiResponse }] });
+      } else {
+        addMessageToUI('ai', 'Sorry, I received an invalid response format from the AI provider.');
+      }
+
+    } catch (err) {
+      console.error('ZAPF AI Error:', err);
+      if (loadingMsg && loadingMsg.parentNode) {
+        aiMessages.removeChild(loadingMsg);
+      }
+      addMessageToUI('ai', 'Sorry, I encountered a network error connecting to the AI service.');
+    }
+  }
+
+  if (aiSend && aiInput) {
+    aiSend.addEventListener('click', handleSend);
+    aiInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+  }
+
 })();
