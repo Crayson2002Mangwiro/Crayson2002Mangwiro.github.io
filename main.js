@@ -1695,7 +1695,7 @@
   const aiInput = $('zapf-ai-input');
   const aiSend = $('zapf-ai-send');
 
-  const API_KEY = 'AIzaSyAzW-X-lZPo0KqG4FUapuQUtdKVEGnrKlg';
+  const API_KEY = 'AIzaSyBTMhMp3F74CJtgVb_-E74CjxG1Y_gt08E';
 
   let aiHistory = [];
 
