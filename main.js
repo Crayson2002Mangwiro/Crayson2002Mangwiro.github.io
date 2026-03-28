@@ -1776,7 +1776,9 @@ ${getSimulationContext()}`;
           temperature: 0.7
         })
       });
-
+      const data = await response.json();
+      aiMessages.removeChild(loadingMsg);
+      
       if (data.choices && data.choices.length > 0 && data.choices[0].message) {
         const aiResponse = data.choices[0].message.content;
         addMessageToUI('ai', aiResponse);
