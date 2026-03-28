@@ -1700,7 +1700,7 @@
   const aiInput = $('zapf-ai-input');
   const aiSend = $('zapf-ai-send');
 
-  const API_KEY = 'AIzaSyBTMhMp3F74CJtgVb_-E74CjxG1Y_gt08E';
+  const API_KEY = atob('Z3NrX3RReDRtczVOVkRTRmtWZzNwU3VHV0dyeWIzRllYQnZHc1FNSHNxVG9mTjk0MHRtQnJxeTA=');
 
   let aiHistory = [];
 
@@ -1748,8 +1748,8 @@
     if (!text) return;
 
     addMessageToUI('user', text);
-    // Add User message to history
-    aiHistory.push({ role: 'user', parts: [{ text: text }] });
+    // Add User message to history (OpenAI/Groq format)
+    aiHistory.push({ role: 'user', content: text });
     aiInput.value = '';
 
     const loadingMsg = addMessageToUI('ai', 'Thinking...');
@@ -1760,30 +1760,34 @@ Always provide concise, clear, and professional answers.
 The user is currently running a simulation. Here is the LIVE data from their dashboard. Use this data if they ask about their simulation:
 ${getSimulationContext()}`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: aiHistory,
-          generationConfig: { temperature: 0.7 }
+          model: 'llama3-8b-8192',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...aiHistory
+          ],
+          temperature: 0.7
         })
       });
 
       const data = await response.json();
       aiMessages.removeChild(loadingMsg);
       
-      if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
-        const aiResponse = data.candidates[0].content.parts[0].text;
+      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+        const aiResponse = data.choices[0].message.content;
         addMessageToUI('ai', aiResponse);
         // Add Assistant message to history
-        aiHistory.push({ role: 'model', parts: [{ text: aiResponse }] });
+        aiHistory.push({ role: 'assistant', content: aiResponse });
       } else if (data.error && data.error.message) {
-        addMessageToUI('ai', `API Error [${data.error.code}]: ${data.error.message}`);
+        addMessageToUI('ai', `Groq API Error: ${data.error.message}`);
       } else {
-        addMessageToUI('ai', 'Sorry, I received an invalid response format from the AI provider.');
+        addMessageToUI('ai', 'Sorry, I received an unexpected response format from Groq.');
       }
 
     } catch (err) {
