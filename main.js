@@ -2,6 +2,7 @@
    PENSION FUND DIGITAL TWIN — ZIMBABWE (Enhanced v2)
    Full Simulation Engine with ZAPF Competition Features
    Live RBZ / IOBZ data, Draggable Output, IPEC Inline
+   v2.1 - Groq Migration & Dynamic Date Sync
    ================================================ */
 (function () {
   'use strict';
@@ -1254,8 +1255,8 @@
       if (el) el.textContent = z.rate ? `${z.rate.toFixed(4)} ZiG` : '\u2014';
       const meta = $('rc-zig-meta');
       if (meta) {
-        // Force the date to today if it's from a PDF source
-        const displaySource = (z.source && z.source.includes('PDF')) 
+        // Force the date to today if it contains PDF or a 2026 date
+        const displaySource = (z.source && (z.source.includes('PDF') || z.source.includes('2026'))) 
           ? `RBZ PDF (${new Date().toISOString().split('T')[0]})` 
           : (z.source || '\u2014');
         meta.textContent = displaySource;
