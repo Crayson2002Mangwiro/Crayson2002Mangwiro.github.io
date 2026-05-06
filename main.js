@@ -860,7 +860,7 @@
   //  API Docs: https://zimrate.statotec.com/docs
   // ═══════════════════════════════════════════════════════════════════
 
-  const ZIMRATE_API = 'https://zimrate.statotec.com/api/v1';
+  // Removed ZIMRATE_API reference
 
   let ratesRefreshTimer = null;
   let ratesCountdownSecs = 300;
@@ -901,33 +901,25 @@
     if (updatedEl) updatedEl.textContent = 'Fetching\u2026';
 
     try {
-      // ── Fetch ALL data from ZimRate v1 in parallel ──
-      const [rateRes, allRatesRes, goldUsdRes, goldZwgRes, zigHistRes, goldHistRes] = await Promise.allSettled([
-        fetch(`${ZIMRATE_API}/rates?pair=USD/ZWG`),
-        fetch(`${ZIMRATE_API}/rates`),
-        fetch(`${ZIMRATE_API}/gold?currency=USD`),
-        fetch(`${ZIMRATE_API}/gold?currency=ZWG`),
-        fetch(`${ZIMRATE_API}/rates/history?pair=USD/ZWG&days=365`),
-        fetch(`${ZIMRATE_API}/gold/history?currency=USD&days=365`),
+      const [rateRes, goldUsdRes] = await Promise.allSettled([
+        fetch(`https://open.er-api.com/v6/latest/USD`),
+        fetch(`https://api.gold-api.com/price/XAU`)
       ]);
 
-      let zigRate = null, goldUsd = null, dateLabel = '';
+      let zigRate = null, goldUsd = null, dateLabel = new Date().toLocaleDateString();
 
       // ═══ 1. ZiG / USD Rate → #rc-zig, #rc-zig-meta ═══
+      let ratesData = null;
       if (rateRes.status === 'fulfilled' && rateRes.value.ok) {
         const json = await rateRes.value.json();
-        const rate = json.data?.rates?.[0];
-        if (rate) {
-          zigRate = rate.avg;
-          dateLabel = rate.date_label || '';
+        ratesData = json.rates;
+        if (ratesData && ratesData.ZWG) {
+          zigRate = ratesData.ZWG;
           const el = $('rc-zig');
           if (el) el.textContent = `${zigRate.toFixed(4)} ZiG`;
           const meta = $('rc-zig-meta');
           if (meta) {
-            const chg = rate.change_pct;
-            const arrow = chg >= 0 ? '▲' : '▼';
-            const color = chg >= 0 ? '#ef4444' : '#22c55e';
-            meta.innerHTML = `Bid: ${rate.bid?.toFixed(4)||'—'} | Ask: ${rate.ask?.toFixed(4)||'—'} | <span style="color:${color};font-weight:600">${arrow} ${Math.abs(chg).toFixed(2)}%</span>`;
+            meta.innerHTML = `Live Market Rate | <span style="color:#22c55e;font-weight:600">Active</span>`;
             meta.className = 'rate-card-meta live';
           }
           // Update sim state with live rate
@@ -939,7 +931,7 @@
             let liveOpt = zigSelect.querySelector('option[data-live="1"]');
             if (!liveOpt) { liveOpt = document.createElement('option'); liveOpt.dataset.live = '1'; zigSelect.insertBefore(liveOpt, zigSelect.firstChild); }
             liveOpt.value = String(zigRate);
-            liveOpt.textContent = `${zigRate.toFixed(2)} ZiG/USD (Live RBZ — ${dateLabel})`;
+            liveOpt.textContent = `${zigRate.toFixed(2)} ZiG/USD (Live Global — ${dateLabel})`;
             liveOpt.selected = true;
           }
           const badge = $('zig-live-badge'); if (badge) badge.style.display = '';
@@ -952,22 +944,13 @@
       // ═══ 2. Gold Coin (USD) → #rc-gold, #rc-gold-meta ═══
       if (goldUsdRes.status === 'fulfilled' && goldUsdRes.value.ok) {
         const json = await goldUsdRes.value.json();
-        const gold = json.data?.gold?.[0];
-        if (gold) {
-          goldUsd = gold.selling_price;
+        if (json && json.price) {
+          goldUsd = json.price;
           const el = $('rc-gold');
           if (el) el.textContent = `$${goldUsd.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
           const meta = $('rc-gold-meta');
           if (meta) {
-            const prev = gold.prev_pm_fix;
-            if (prev) {
-              const chg = ((goldUsd - prev) / prev * 100);
-              const arrow = chg >= 0 ? '▲' : '▼';
-              const color = chg >= 0 ? '#22c55e' : '#ef4444';
-              meta.innerHTML = `Prev Fix: $${prev.toLocaleString()} | <span style="color:${color};font-weight:600">${arrow} ${Math.abs(chg).toFixed(2)}%</span>`;
-            } else {
-              meta.textContent = 'RBZ Mosi-oa-Tunya (1 oz)';
-            }
+            meta.innerHTML = `Live Spot Price | <span style="color:#22c55e;font-weight:600">Active</span>`;
             meta.className = 'rate-card-meta live';
           }
           // Update sim state
@@ -978,7 +961,7 @@
             let liveOpt = goldSelect.querySelector('option[data-live="1"]');
             if (!liveOpt) { liveOpt = document.createElement('option'); liveOpt.dataset.live = '1'; goldSelect.insertBefore(liveOpt, goldSelect.firstChild); }
             liveOpt.value = String(goldUsd);
-            liveOpt.textContent = `$${Math.round(goldUsd).toLocaleString()} (Live RBZ)`;
+            liveOpt.textContent = `$${Math.round(goldUsd).toLocaleString()} (Live Global)`;
             liveOpt.selected = true;
           }
           const badge = $('gold-live-badge'); if (badge) badge.style.display = '';
@@ -989,76 +972,42 @@
       }
 
       // ═══ 3. Gold in ZiG → #rc-gold-zig ═══
-      if (goldZwgRes.status === 'fulfilled' && goldZwgRes.value.ok) {
-        const json = await goldZwgRes.value.json();
-        const gold = json.data?.gold?.[0];
-        if (gold) {
-          const el = $('rc-gold-zig');
-          if (el) el.textContent = `ZiG ${gold.selling_price?.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
-        }
-      } else if (goldUsd && zigRate) {
-        // Fallback: compute from USD gold × ZiG rate
+      if (goldUsd && zigRate) {
         const el = $('rc-gold-zig');
         if (el) el.textContent = `ZiG ${(goldUsd * zigRate).toLocaleString(undefined, {maximumFractionDigits:0})}`;
       }
 
       // ═══ 4. All Exchange Rates → #idbz-rates-table ═══
-      if (allRatesRes.status === 'fulfilled' && allRatesRes.value.ok) {
-        const json = await allRatesRes.value.json();
-        const rates = json.data?.rates;
-        if (rates && rates.length > 0) {
-          renderIdbzTable(rates, dateLabel || 'RBZ Interbank');
-        }
+      if (ratesData && zigRate) {
+        // Build mock pairs against ZWG from USD base
+        const pairs = ['EUR', 'GBP', 'ZAR', 'BWP'];
+        let tableData = pairs.map(p => {
+            let rateToUsd = ratesData[p];
+            // If 1 USD = rateToUsd P, and 1 USD = zigRate ZWG
+            // Then 1 P = zigRate / rateToUsd ZWG
+            return {
+               currency_pair: p + '/ZWG',
+               avg: rateToUsd ? (zigRate / rateToUsd) : null
+            };
+        }).filter(d => d.avg !== null);
+        renderIdbzTable(tableData, 'Global Exchange API');
       }
 
       // ═══ 5. Sparkline Charts ═══
       setTimeout(() => {
-        // ZiG/USD history chart
-        if (zigHistRes.status === 'fulfilled' && zigHistRes.value.ok) {
-          zigHistRes.value.json().then(json => {
-            const history = json.data?.history || [];
-            if (history.length >= 2) {
-              drawSparkline('zig-sparkline', history, '#60a5fa', 'date', 'avg', '', ' ZiG');
-              const srcEl = $('history-source');
-              if (srcEl) { srcEl.textContent = `Source: RBZ via ZimRate API (${history.length} daily points)`; srcEl.className = 'rates-source-tag live'; }
-            } else {
-              drawSparkline('zig-sparkline', ZIG_HISTORY, '#60a5fa', 'date', 'rate', '', ' ZiG');
-            }
-          }).catch(() => {
-            drawSparkline('zig-sparkline', ZIG_HISTORY, '#60a5fa', 'date', 'rate', '', ' ZiG');
-          });
-        } else {
-          drawSparkline('zig-sparkline', ZIG_HISTORY, '#60a5fa', 'date', 'rate', '', ' ZiG');
-        }
-
-        // Gold price history chart
-        if (goldHistRes.status === 'fulfilled' && goldHistRes.value.ok) {
-          goldHistRes.value.json().then(json => {
-            const history = json.data?.history || [];
-            if (history.length >= 2) {
-              // Map to format expected by drawSparkline
-              const mapped = history.map(h => ({ date: h.date, usd: h.selling_price || h.avg }));
-              drawSparkline('gold-sparkline', mapped, '#d4a843', 'date', 'usd', '$', '');
-            } else {
-              drawSparkline('gold-sparkline', GOLD_DATA.historicalPrices, '#d4a843', 'date', 'usd', '$', '');
-            }
-          }).catch(() => {
-            drawSparkline('gold-sparkline', GOLD_DATA.historicalPrices, '#d4a843', 'date', 'usd', '$', '');
-          });
-        } else {
-          drawSparkline('gold-sparkline', GOLD_DATA.historicalPrices, '#d4a843', 'date', 'usd', '$', '');
-        }
+        drawSparkline('zig-sparkline', ZIG_HISTORY, '#60a5fa', 'date', 'rate', '', ' ZiG');
+        drawSparkline('gold-sparkline', GOLD_DATA.historicalPrices, '#d4a843', 'date', 'usd', '$', '');
+        const srcEl = $('history-source');
+        if (srcEl) { srcEl.textContent = `Source: Estimated Historical Context`; srcEl.className = 'rates-source-tag'; }
       }, 80);
 
       // ═══ 6. Update header ═══
       if (updatedEl) {
-        updatedEl.textContent = dateLabel
-          ? `Updated: ${dateLabel}`
-          : `Updated: ${new Date().toLocaleTimeString()}`;
+        updatedEl.textContent = `Updated: ${dateLabel}`;
         updatedEl.style.color = '';
       }
 
-      logTerminal(`Live rates fetched: ZiG/USD=${zigRate?.toFixed(4)||'N/A'}, Gold=$${goldUsd?.toLocaleString()||'N/A'} (${dateLabel || 'today'})`, 'success', 'log');
+      logTerminal(`Live rates fetched: ZiG/USD=${zigRate?.toFixed(4)||'N/A'}, Gold=$${goldUsd?.toLocaleString()||'N/A'}`, 'success', 'log');
 
     } catch (err) {
       console.error('[LiveRates] Error:', err);
@@ -1070,21 +1019,14 @@
   function renderIdbzTable(rates, sourceLabel) {
     const container = $('idbz-rates-table'); if (!container) return;
     const tag = $('idbz-source-tag');
-    if (tag) { tag.textContent = sourceLabel || 'RBZ Interbank'; tag.className = 'rates-source-tag live'; }
-    let html = '<table class="rates-table"><thead><tr><th>Currency</th><th>Bid</th><th>Ask</th><th>Mid Rate</th><th>Change</th></tr></thead><tbody>';
+    if (tag) { tag.textContent = sourceLabel || 'Live Market'; tag.className = 'rates-source-tag live'; }
+    let html = '<table class="rates-table"><thead><tr><th>Currency</th><th>Mid Rate</th></tr></thead><tbody>';
     rates.forEach((r, i) => {
       const pair = r.currency_pair || '';
-      const base = pair.split('/')[0] || pair;
-      const chg = r.change_pct;
-      const isUp = chg >= 0;
-      const chgColor = isUp ? '#ef4444' : '#22c55e';
       const bg = i % 2 === 0 ? 'transparent' : 'rgba(148,163,184,0.06)';
       html += `<tr style="background:${bg}">
-        <td>${base}/ZWG</td>
-        <td>${r.bid?.toFixed(4)||'—'}</td>
-        <td>${r.ask?.toFixed(4)||'—'}</td>
+        <td>${pair}</td>
         <td style="font-weight:600">${r.avg?.toFixed(4)||'—'}</td>
-        <td style="color:${chgColor};font-weight:500">${chg !== undefined ? `${isUp?'+':''}${chg.toFixed(2)}%` : '—'}</td>
       </tr>`;
     });
     html += '</tbody></table>';
@@ -1137,47 +1079,47 @@
   async function fetchLiveRates() {
     try {
       const [rateRes, goldRes] = await Promise.allSettled([
-        fetch(`${ZIMRATE_API}/rates?pair=USD/ZWG`),
-        fetch(`${ZIMRATE_API}/gold?currency=USD`),
+        fetch(`https://open.er-api.com/v6/latest/USD`),
+        fetch(`https://api.gold-api.com/price/XAU`)
       ]);
 
       // ZiG/USD for simulator
       if (rateRes.status === 'fulfilled' && rateRes.value.ok) {
         const json = await rateRes.value.json();
-        const rate = json.data?.rates?.[0];
-        if (rate && rate.avg > 0) {
-          simState.zigRate = rate.avg;
-          GOLD_DATA.zigConversion = rate.avg;
+        const rate = json.rates?.ZWG;
+        if (rate && rate > 0) {
+          simState.zigRate = rate;
+          GOLD_DATA.zigConversion = rate;
           const zigSelect = $('setting-zig-rate');
           if (zigSelect) {
             let liveOpt = zigSelect.querySelector('option[data-live="1"]');
             if (!liveOpt) { liveOpt = document.createElement('option'); liveOpt.dataset.live = '1'; zigSelect.insertBefore(liveOpt, zigSelect.firstChild); }
-            liveOpt.value = String(rate.avg);
-            liveOpt.textContent = `${rate.avg.toFixed(2)} ZiG/USD — RBZ Live (${rate.date_label || 'today'})`;
+            liveOpt.value = String(rate);
+            liveOpt.textContent = `${rate.toFixed(2)} ZiG/USD — Live Global (${new Date().toLocaleDateString()})`;
             liveOpt.selected = true;
           }
           const badge = $('zig-live-badge'); if (badge) badge.style.display = '';
-          logTerminal(`ZiG rate: ${rate.avg.toFixed(4)} ZiG/USD (RBZ ${rate.date_label || ''})`, 'success', 'log');
+          logTerminal(`ZiG rate: ${rate.toFixed(4)} ZiG/USD (Live Global)`, 'success', 'log');
         }
       }
 
       // Gold price for simulator
       if (goldRes.status === 'fulfilled' && goldRes.value.ok) {
         const json = await goldRes.value.json();
-        const gold = json.data?.gold?.[0];
-        if (gold && gold.selling_price > 0) {
-          simState.goldBasePrice = gold.selling_price;
-          GOLD_DATA.currentPrice = gold.selling_price;
+        const price = json.price;
+        if (price && price > 0) {
+          simState.goldBasePrice = price;
+          GOLD_DATA.currentPrice = price;
           const goldSelect = $('setting-gold-price');
           if (goldSelect) {
             let liveOpt = goldSelect.querySelector('option[data-live="1"]');
             if (!liveOpt) { liveOpt = document.createElement('option'); liveOpt.dataset.live = '1'; goldSelect.insertBefore(liveOpt, goldSelect.firstChild); }
-            liveOpt.value = String(gold.selling_price);
-            liveOpt.textContent = `$${Math.round(gold.selling_price).toLocaleString()} — RBZ Live`;
+            liveOpt.value = String(price);
+            liveOpt.textContent = `$${Math.round(price).toLocaleString()} — Live Spot`;
             liveOpt.selected = true;
           }
           const badge = $('gold-live-badge'); if (badge) badge.style.display = '';
-          logTerminal(`Gold price: $${gold.selling_price.toLocaleString()} (RBZ Mosi-oa-Tunya)`, 'gold', 'log');
+          logTerminal(`Gold price: $${price.toLocaleString()} (Live Spot)`, 'gold', 'log');
         }
       }
     } catch (err) {
