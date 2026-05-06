@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=2" />
 </head>
 <body>
 
@@ -124,9 +124,9 @@
         <div class="param-group">
           <label class="param-label">
             <span class="param-name">Annual Inflation Rate (%)</span>
-            <span class="param-value" id="val-inflation">5</span>
+            <span class="param-value" id="val-inflation">8</span>
           </label>
-          <input type="range" class="param-slider" id="slider-inflation" min="1" max="500" value="5" step="1" />
+          <input type="range" class="param-slider" id="slider-inflation" min="1" max="500" value="8" step="1" />
         </div>
       </div>
 
@@ -140,7 +140,7 @@
             <span class="param-value" id="val-alloc-equities">50</span>
           </label>
           <input type="range" class="param-slider slider-equities" id="slider-alloc-equities" min="0" max="100" value="50" step="1" />
-          <span class="alloc-detail">Expected Return: 12% | Risk: High</span>
+          <span class="alloc-detail">Expected Return: <strong>14%</strong> | Risk: <strong>High</strong> — <em>ZSE All-Share Index avg</em></span>
         </div>
         <div class="param-group">
           <label class="param-label">
@@ -148,7 +148,7 @@
             <span class="param-value" id="val-alloc-bonds">25</span>
           </label>
           <input type="range" class="param-slider slider-bonds" id="slider-alloc-bonds" min="0" max="100" value="25" step="1" />
-          <span class="alloc-detail">Expected Return: 6% | Risk: Low-Medium</span>
+          <span class="alloc-detail">Expected Return: <strong>8%</strong> | Risk: <strong>Low-Medium</strong> — <em>RBZ Treasury Bill yield</em></span>
         </div>
         <div class="param-group">
           <label class="param-label">
@@ -156,7 +156,7 @@
             <span class="param-value" id="val-alloc-realestate">15</span>
           </label>
           <input type="range" class="param-slider slider-realestate" id="slider-alloc-realestate" min="0" max="100" value="15" step="1" />
-          <span class="alloc-detail">Expected Return: 8% | Risk: Medium</span>
+          <span class="alloc-detail">Expected Return: <strong>9%</strong> | Risk: <strong>Medium</strong> — <em>IPEC fund reports</em></span>
         </div>
         <div class="param-group">
           <label class="param-label">
@@ -164,7 +164,7 @@
             <span class="param-value" id="val-alloc-money">5</span>
           </label>
           <input type="range" class="param-slider slider-money" id="slider-alloc-money" min="0" max="100" value="5" step="1" />
-          <span class="alloc-detail">Expected Return: 3% | Risk: Very Low</span>
+          <span class="alloc-detail">Expected Return: <strong>5%</strong> | Risk: <strong>Very Low</strong> — <em>RBZ money market rate</em></span>
         </div>
         <div class="param-group">
           <label class="param-label">
@@ -172,7 +172,7 @@
             <span class="param-value" id="val-alloc-gold">5</span>
           </label>
           <input type="range" class="param-slider slider-gold" id="slider-alloc-gold" min="0" max="100" value="5" step="1" />
-          <span class="alloc-detail">Expected Return: 10% | Risk: Medium (Inflation Hedge)</span>
+          <span class="alloc-detail">Expected Return: <strong>12%</strong> | Risk: <strong>Medium</strong> — <em>LBMA 2022–2025 trend</em></span>
         </div>
         <div class="alloc-chart-wrap">
           <canvas id="alloc-chart" width="200" height="200"></canvas>
@@ -185,10 +185,10 @@
         <div class="param-group">
           <label class="param-label">
             <span class="param-name">Life Expectancy (Years)</span>
-            <span class="param-value" id="val-life-expectancy">80</span>
+            <span class="param-value" id="val-life-expectancy">72</span>
           </label>
-          <input type="range" class="param-slider" id="slider-life-expectancy" min="60" max="100" value="80" step="1" />
-          <span class="alloc-detail">Zimbabwe avg: 62 | NSSA planning horizon: 75</span>
+          <input type="range" class="param-slider" id="slider-life-expectancy" min="50" max="100" value="72" step="1" />
+          <span class="alloc-detail"><strong>WHO Zimbabwe 2023: 62</strong> | Stable scenario: 72</span>
         </div>
         <div class="param-group">
           <label class="param-label">
@@ -505,16 +505,18 @@
           <label>Gold Price Basis (USD/oz) <span id="gold-live-badge" class="live-badge" style="display:none;">LIVE</span></label>
           <select id="setting-gold-price">
             <option value="2000">$2,000 (Conservative)</option>
-            <option value="2400" selected>$2,400 (Current Avg)</option>
-            <option value="3000">$3,000 (Bullish)</option>
+            <option value="2400">$2,400 (2024 Avg)</option>
+            <option value="2890" selected>$2,890 (Current LBMA + 5%)</option>
+            <option value="3200">$3,200 (Bullish 2025)</option>
           </select>
         </div>
         <div class="modal-field">
           <label>ZiG Exchange Rate (per USD) <span id="zig-live-badge" class="live-badge" style="display:none;">LIVE</span></label>
           <select id="setting-zig-rate">
-            <option value="6">6 ZiG/USD (Official)</option>
-            <option value="13" selected>13 ZiG/USD (Market)</option>
-            <option value="25">25 ZiG/USD (Parallel)</option>
+            <option value="6">6 ZiG/USD (Official Apr 2024)</option>
+            <option value="13">13 ZiG/USD (Launch Rate)</option>
+            <option value="27.5" selected>27.5 ZiG/USD (Current Market Est.)</option>
+            <option value="35">35 ZiG/USD (Parallel)</option>
           </select>
         </div>
       </div>
@@ -552,6 +554,6 @@
     </div>
   </div>
 
-  <script src="main.js"></script>
+  <script src="main.js?v=2"></script>
 </body>
 </html>

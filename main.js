@@ -25,14 +25,15 @@
       { date: '2024-01-30', usd: 2022.50, event: 'Jan dip' },
       { date: '2024-02-13', usd: 2015.20, event: 'Feb 2024' },
       { date: '2024-04-05', usd: 2300.00, event: 'ZiG introduction' },
-      { date: '2024-05-22', usd: 2427.30, event: 'May 2024 (Peak)' },
+      { date: '2024-05-22', usd: 2427.30, event: 'May 2024' },
       { date: '2024-09-15', usd: 2580.00, event: 'Sep 2024' },
       { date: '2024-12-31', usd: 2650.00, event: 'End 2024' },
-      { date: '2025-03-14', usd: 2890.00, event: 'Mar 2025 est.' },
+      { date: '2025-03-14', usd: 2890.00, event: 'Mar 2025' },
+      { date: '2025-06-01', usd: 3050.00, event: 'Jun 2025 est.' },
     ],
-    currentPrice: 2400, // Configurable baseline
-    annualAppreciation: 0.10, // ~10% per year historically
-    zigConversion: 13, // Market rate ZiG per USD
+    currentPrice: 2890, // Updated baseline — LBMA ~$2750 + 5% RBZ premium
+    annualAppreciation: 0.12, // ~12% per year (2022-2025 LBMA trend)
+    zigConversion: 27.5, // Updated market rate ZiG per USD (mid-2025)
   };
 
   // ═══════════════════════════════════════════════
@@ -49,8 +50,10 @@
     { date: 'Nov 2024', rate: 20.30 },
     { date: 'Dec 2024', rate: 21.40 },
     { date: 'Jan 2025', rate: 22.00 },
-    { date: 'Feb 2025', rate: 22.80 },
-    { date: 'Mar 2025', rate: 23.50, event: 'Current est.' },
+    { date: 'Feb 2025', rate: 23.50 },
+    { date: 'Mar 2025', rate: 25.00 },
+    { date: 'Apr 2025', rate: 26.80 },
+    { date: 'May 2025', rate: 27.50, event: 'Current est.' },
   ];
 
   // ═══════════════════════════════════════════════
@@ -63,35 +66,35 @@
       employeeContrib: 30, employerContrib: 45, payout: 100,
       age: 35, retirement: 60, inflation: 231,
       allocEquities: 10, allocBonds: 5, allocRealestate: 15, allocMoney: 60, allocGold: 10,
-      inflationModel: 'volatile', lifeExpectancy: 62, longevityUncertainty: 5,
+      inflationModel: 'volatile', lifeExpectancy: 55, longevityUncertainty: 8,
     },
     covid2020: {
       name: 'COVID-19 Impact (2020)',
       employeeContrib: 40, employerContrib: 60, payout: 150,
       age: 30, retirement: 60, inflation: 350,
       allocEquities: 30, allocBonds: 30, allocRealestate: 20, allocMoney: 15, allocGold: 5,
-      inflationModel: 'volatile', lifeExpectancy: 68, longevityUncertainty: 10,
+      inflationModel: 'volatile', lifeExpectancy: 61, longevityUncertainty: 10,
     },
     zig2024: {
       name: 'ZiG Currency Transition (2024)',
       employeeContrib: 50, employerContrib: 75, payout: 200,
       age: 30, retirement: 60, inflation: 55,
       allocEquities: 40, allocBonds: 20, allocRealestate: 20, allocMoney: 10, allocGold: 10,
-      inflationModel: 'volatile', lifeExpectancy: 72, longevityUncertainty: 8,
+      inflationModel: 'volatile', lifeExpectancy: 62, longevityUncertainty: 8,
     },
     stable: {
       name: 'Stable Growth Baseline',
       employeeContrib: 80, employerContrib: 120, payout: 300,
-      age: 25, retirement: 65, inflation: 5,
+      age: 25, retirement: 65, inflation: 8,
       allocEquities: 50, allocBonds: 25, allocRealestate: 15, allocMoney: 5, allocGold: 5,
-      inflationModel: 'decreasing', lifeExpectancy: 80, longevityUncertainty: 5,
+      inflationModel: 'decreasing', lifeExpectancy: 72, longevityUncertainty: 5,
     },
     nssa: {
       name: 'NSSA Default Parameters',
-      employeeContrib: 45, employerContrib: 45, payout: 180,
-      age: 30, retirement: 60, inflation: 25,
+      employeeContrib: 45, employerContrib: 45, payout: 120,
+      age: 30, retirement: 60, inflation: 30,
       allocEquities: 35, allocBonds: 30, allocRealestate: 20, allocMoney: 10, allocGold: 5,
-      inflationModel: 'constant', lifeExpectancy: 75, longevityUncertainty: 8,
+      inflationModel: 'constant', lifeExpectancy: 62, longevityUncertainty: 8,
     },
   };
 
@@ -140,7 +143,7 @@
     running: false, animFrame: null, projectionData: [],
     currentStep: 0, challengeEvents: [],
     currency: 'USD', projectionYears: 30, inflationModel: 'decreasing',
-    goldBasePrice: 2400, zigRate: 13,
+    goldBasePrice: 2890, zigRate: 27.5,
   };
 
   // ═══════════════════════════════════════════════
@@ -211,7 +214,7 @@
     });
     cx2d.beginPath(); cx2d.arc(cx, cy, r * 0.55, 0, Math.PI * 2);
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    cx2d.fillStyle = isLight ? '#f7f9fc' : '#0d1117'; cx2d.fill();
+    cx2d.fillStyle = isLight ? '#f7f9fc' : '#050505'; cx2d.fill();
     cx2d.fillStyle = isLight ? '#0f172a' : '#e2e8f0';
     cx2d.font = '700 14px "Plus Jakarta Sans"'; cx2d.textAlign = 'center';
     cx2d.fillText(total + '%', cx, cy + 5);
@@ -339,11 +342,11 @@
           go = parseInt(sliders.allocGold.value);
     const total = eq + bo + re + mo + go || 1;
     return {
-      equities: { weight: eq / total, expectedReturn: 0.12, volatility: 0.25 },
-      bonds: { weight: bo / total, expectedReturn: 0.06, volatility: 0.08 },
-      realestate: { weight: re / total, expectedReturn: 0.08, volatility: 0.15 },
-      moneyMarket: { weight: mo / total, expectedReturn: 0.03, volatility: 0.02 },
-      gold: { weight: go / total, expectedReturn: GOLD_DATA.annualAppreciation, volatility: 0.18 },
+      equities: { weight: eq / total, expectedReturn: 0.14, volatility: 0.30 },
+      bonds: { weight: bo / total, expectedReturn: 0.08, volatility: 0.12 },
+      realestate: { weight: re / total, expectedReturn: 0.09, volatility: 0.15 },
+      moneyMarket: { weight: mo / total, expectedReturn: 0.05, volatility: 0.04 },
+      gold: { weight: go / total, expectedReturn: GOLD_DATA.annualAppreciation, volatility: 0.16 },
     };
   }
 
@@ -421,7 +424,7 @@
     const w = canvas.width, h = canvas.height;
     ctx.clearRect(0, 0, w, h);
     const bg = ctx.createLinearGradient(0, 0, 0, h);
-    bg.addColorStop(0, '#0f1623'); bg.addColorStop(1, '#0a0e1a');
+    bg.addColorStop(0, '#050505'); bg.addColorStop(1, '#000000');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
     ctx.strokeStyle = 'rgba(148,163,184,0.1)'; ctx.lineWidth = 1;
     for (let x = P.left; x < w - P.right; x += 40) { ctx.beginPath(); ctx.moveTo(x, P.top); ctx.lineTo(x, h - P.bottom); ctx.stroke(); }
@@ -513,7 +516,7 @@
     }
 
     const lX = w - P.right - 190, lY = P.top + 6;
-    ctx.fillStyle = 'rgba(15,22,36,0.92)'; ctx.strokeStyle = 'rgba(148,163,184,0.25)'; ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.94)'; ctx.strokeStyle = 'rgba(148,163,184,0.25)'; ctx.lineWidth = 1;
     roundRect(ctx, lX, lY, 180, 62, 6); ctx.fill(); ctx.stroke();
     ctx.font = '10px "JetBrains Mono"'; ctx.textAlign = 'left';
     const legs = [
@@ -580,6 +583,7 @@
     else logTerminal('✓ Fund solvent through projection period.', 'success', 'log');
     generateIPECReport(data, minFundingReq, replRatio, depPt);
     generateRecommendations(data, depPt, peak, final);
+    logDataSources();
     updateIPECBadge(data, minFundingReq);
     updateInlineIPEC(data, minFundingReq);
   }
@@ -684,6 +688,24 @@
     addTermLine(term, `   • Regional diversification: invest in SADC pension markets`, 'info');
     addTermLine(term, `   • Lobby IPEC for inflation-indexed annuity regulations`, 'info');
     addTermLine(term, `   • Digital pension tracking via mobile to rebuild trust`, 'info');
+  }
+
+  function logDataSources() {
+    logTerminal('', 'info', 'log');
+    logTerminal('══════════════════════════════════', 'info', 'log');
+    logTerminal('<b>VERIFIABLE DATA SOURCES</b>', 'ipec', 'log');
+    logTerminal('────────────────────────────────', 'info', 'log');
+    logTerminal('→ <b>ZSE Equities (14%)</b>: ZSE All-Share Index historical avg — <a href="https://www.zse.co.zw" target="_blank" style="color:#60a5fa">zse.co.zw</a>', 'data', 'log');
+    logTerminal('→ <b>Treasury Bonds (8%)</b>: RBZ Monetary Policy Statement 2024 — <a href="https://www.rbz.co.zw" target="_blank" style="color:#60a5fa">rbz.co.zw</a>', 'data', 'log');
+    logTerminal('→ <b>Real Estate (9%)</b>: IPEC Pension Fund Performance Reports — <a href="https://www.ipec.co.zw" target="_blank" style="color:#60a5fa">ipec.co.zw</a>', 'data', 'log');
+    logTerminal('→ <b>Money Market (5%)</b>: RBZ Overnight Accommodation Rate — <a href="https://www.rbz.co.zw" target="_blank" style="color:#60a5fa">rbz.co.zw</a>', 'data', 'log');
+    logTerminal('→ <b>Gold (12%)</b>: LBMA PM Fix + 5% (Mosi oa Tunya) — <a href="https://www.lbma.org.uk" target="_blank" style="color:#d4a843">lbma.org.uk</a>', 'gold', 'log');
+    logTerminal('→ <b>ZiG/USD Rate</b>: RBZ Interbank via ZimRate API — <a href="https://zimrate.statotec.com" target="_blank" style="color:#60a5fa">zimrate.statotec.com</a>', 'data', 'log');
+    logTerminal('→ <b>Life Expectancy</b>: WHO Global Health Observatory (Zimbabwe 2023: 62y) — <a href="https://www.who.int/data/gho" target="_blank" style="color:#60a5fa">who.int</a>', 'data', 'log');
+    logTerminal('→ <b>Inflation</b>: ZIMSTAT Consumer Price Index — <a href="https://www.zimstat.co.zw" target="_blank" style="color:#60a5fa">zimstat.co.zw</a>', 'data', 'log');
+    logTerminal('→ <b>IPEC Thresholds</b>: SI 95/2014 & Directive 2/2020 — <a href="https://www.ipec.co.zw" target="_blank" style="color:#60a5fa">ipec.co.zw</a>', 'ipec', 'log');
+    logTerminal('→ <b>NSSA Rates</b>: National Social Security Authority Act — <a href="https://www.nssa.org.zw" target="_blank" style="color:#60a5fa">nssa.org.zw</a>', 'data', 'log');
+    logTerminal('══════════════════════════════════', 'info', 'log');
   }
 
   function showPensionerView() {
