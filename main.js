@@ -581,6 +581,50 @@
     logTerminal(`Gold Holdings: ${final.goldHoldings.toFixed(4)} oz (${fmtCur(final.goldValue)})`, 'gold', 'log');
     if (depPt > 0) logTerminal(`FUND DEPLETED at year ${ytd}`, 'error', 'log');
     else logTerminal('✓ Fund solvent through projection period.', 'success', 'log');
+
+    // ── Key Insights Summary in main log ──
+    logTerminal('', 'info', 'log');
+    logTerminal('══════════════════════════════════', 'info', 'log');
+    logTerminal('<b>KEY INSIGHTS</b>', 'ipec', 'log');
+    logTerminal('────────────────────────────────', 'info', 'log');
+    const _inflation = parseFloat(sliders.inflation.value);
+    const _empC = parseFloat(sliders.employeeContrib.value);
+    const _erC = parseFloat(sliders.employerContrib.value);
+    const _totalC = _empC + _erC;
+    const _lifeExp = parseInt(sliders.lifeExpectancy.value);
+    const _retAge = parseInt(sliders.retirement.value);
+    const _curAge = parseInt(sliders.age.value);
+    const _retM = data.findIndex(d => d.phase === 'drawdown');
+    const _retData = _retM > 0 ? data[_retM] : final;
+    const _avgFR = data.reduce((s, d) => s + d.fundingRatio, 0) / data.length;
+    const _erosion = peak > 0 ? ((peak - final.balance) / peak * 100) : 0;
+    const _drawdownYrs = depPt > 0 ? ((depPt - (_retM > 0 ? _retM : 0)) / 12) : (_lifeExp - _retAge);
+
+    // Sustainability verdict
+    if (depPt > 0) {
+      const shortfall = Math.max(0, _lifeExp - _retAge - _drawdownYrs);
+      logTerminal(`⚠ Fund lasts <b>${_drawdownYrs.toFixed(1)} years</b> post-retirement — <b>${shortfall.toFixed(0)} year shortfall</b>`, 'error', 'log');
+    } else {
+      logTerminal(`✓ Fund sustains payouts for <b>${_drawdownYrs.toFixed(0)}+ years</b> post-retirement`, 'success', 'log');
+    }
+
+    // Inflation impact
+    logTerminal(`Inflation erosion: <b>${_erosion.toFixed(1)}%</b> of peak value | Real balance: ${fmtCur(final.realBalance)}`, _erosion > 50 ? 'error' : 'data', 'log');
+
+    // Funding ratio
+    logTerminal(`Avg funding ratio: <b>${_avgFR.toFixed(1)}%</b> ${_avgFR >= 100 ? '✓' : '⚠'}`, _avgFR >= 100 ? 'success' : 'warning', 'log');
+
+    // Coverage
+    const _neededTotal = parseFloat(sliders.payout.value) * 12 * Math.max(0, _lifeExp - _retAge);
+    const _coverage = _neededTotal > 0 ? (_retData.balance / _neededTotal * 100) : 0;
+    logTerminal(`Retirement coverage: <b>${_coverage.toFixed(1)}%</b> of income needed`, _coverage >= 100 ? 'success' : _coverage >= 70 ? 'warning' : 'error', 'log');
+
+    // Contribution adequacy
+    if (_totalC < 150) logTerminal(`⚠ Contributions ($${_totalC}/mo) below recommended $150/mo`, 'warning', 'log');
+
+    logTerminal('→ See <b>Recommendations</b> tab for full insights report', 'info', 'log');
+    logTerminal('══════════════════════════════════', 'info', 'log');
+
     generateIPECReport(data, minFundingReq, replRatio, depPt);
     generateRecommendations(data, depPt, peak, final);
     logDataSources();
@@ -660,34 +704,224 @@
     const inflation = parseFloat(sliders.inflation.value);
     const empContrib = parseFloat(sliders.employeeContrib.value);
     const erContrib = parseFloat(sliders.employerContrib.value);
+    const totalContrib = empContrib + erContrib;
     const goldAlloc = parseInt(sliders.allocGold.value);
     const equityAlloc = parseInt(sliders.allocEquities.value);
+    const bondAlloc = parseInt(sliders.allocBonds.value);
+    const realEstateAlloc = parseInt(sliders.allocRealestate.value);
     const cashAlloc = parseInt(sliders.allocMoney.value);
-    addTermLine(term, 'STRATEGIC RECOMMENDATIONS', 'success');
+    const currentAge = parseInt(sliders.age.value);
+    const retirementAge = parseInt(sliders.retirement.value);
+    const lifeExp = parseInt(sliders.lifeExpectancy.value);
+    const monthlyPayout = parseFloat(sliders.payout.value);
+    const yearsToRetire = Math.max(0, retirementAge - currentAge);
+    const retM = data.findIndex(d => d.phase === 'drawdown');
+    const retData = retM > 0 ? data[retM] : final;
+    const drawdownYears = depPt > 0 ? ((depPt - (retM > 0 ? retM : 0)) / 12) : (lifeExp - retirementAge);
+    const avgFR = data.reduce((s, d) => s + d.fundingRatio, 0) / data.length;
+    const preRetIncome = totalContrib > 0 ? totalContrib / 0.09 : monthlyPayout / 0.65;
+    const replRatio = preRetIncome > 0 ? (monthlyPayout / preRetIncome * 100) : 0;
+    const realReturnVsInflation = (0.14 * equityAlloc/100 + 0.08 * bondAlloc/100 + 0.09 * realEstateAlloc/100 + 0.05 * cashAlloc/100 + 0.12 * goldAlloc/100) * 100 - inflation;
+    const inflModel = simState.inflationModel;
+    const presetKey = $('preset-select')?.value || 'custom';
+
+    // ═══ HEADER ═══
+    addTermLine(term, '<b>═══════════════════════════════════════════════</b>', 'info');
+    addTermLine(term, '<b>   COMPREHENSIVE SIMULATION INSIGHTS REPORT</b>', 'success');
+    addTermLine(term, '<b>═══════════════════════════════════════════════</b>', 'info');
+    addTermLine(term, '', 'info');
+
+    // ═══ 1. SCENARIO SUMMARY ═══
+    addTermLine(term, '<b>📋 SCENARIO SUMMARY</b>', 'ipec');
     addTermLine(term, '────────────────────────────────', 'info');
-    if (empContrib + erContrib < 150) {
-      addTermLine(term, `INCREASE CONTRIBUTIONS: Total $${empContrib + erContrib}/mo is below recommended. Target >=$150/mo combined.`, 'warning');
-      addTermLine(term, `   → Advocate for employer match increase under Pension & Provident Funds Act`, 'info');
+    const scenarioName = PRESETS[presetKey]?.name || 'Custom Scenario';
+    addTermLine(term, `   Scenario: <b>${scenarioName}</b>`, 'data');
+    addTermLine(term, `   Member Age: <b>${currentAge}</b> | Retirement Age: <b>${retirementAge}</b> | Years to Retire: <b>${yearsToRetire}</b>`, 'data');
+    addTermLine(term, `   Life Expectancy: <b>${lifeExp} years</b> (WHO Zimbabwe 2023: 62)`, 'data');
+    addTermLine(term, `   Inflation: <b>${inflation}%</b> (Model: ${inflModel})`, 'data');
+    addTermLine(term, `   Contributions: <b>$${empContrib}</b> (employee) + <b>$${erContrib}</b> (employer) = <b>$${totalContrib}/mo</b>`, 'data');
+    addTermLine(term, `   Monthly Payout Target: <b>${fmtCur(monthlyPayout)}</b>`, 'data');
+    addTermLine(term, '', 'info');
+
+    // ═══ 2. KEY FINANCIAL METRICS ═══
+    addTermLine(term, '<b>📊 KEY FINANCIAL METRICS</b>', 'ipec');
+    addTermLine(term, '────────────────────────────────', 'info');
+    addTermLine(term, `   Peak Fund Balance:       <b>${fmtCur(peak)}</b>`, 'success');
+    addTermLine(term, `   Final Nominal Balance:   <b>${fmtCur(final.balance)}</b>`, final.balance > 0 ? 'data' : 'error');
+    addTermLine(term, `   Final Real Balance:      <b>${fmtCur(final.realBalance)}</b>`, 'data');
+    const erosion = peak > 0 ? ((peak - final.balance) / peak * 100) : 0;
+    addTermLine(term, `   Inflation Erosion:       <b>${erosion.toFixed(1)}%</b> of peak value lost`, erosion > 50 ? 'error' : erosion > 25 ? 'warning' : 'success');
+    addTermLine(term, `   Total Contributions:     <b>${fmtCur(final.totalContributions)}</b>`, 'data');
+    const roi = final.totalContributions > 0 ? ((peak - final.totalContributions) / final.totalContributions * 100) : 0;
+    addTermLine(term, `   Investment Return on Contributions: <b>${roi.toFixed(1)}%</b>`, roi > 100 ? 'success' : roi > 0 ? 'data' : 'error');
+    addTermLine(term, `   Avg Funding Ratio:       <b>${avgFR.toFixed(1)}%</b>`, avgFR >= 100 ? 'success' : avgFR >= 75 ? 'warning' : 'error');
+    addTermLine(term, `   Replacement Ratio:       <b>${replRatio.toFixed(1)}%</b> (IPEC target: ≥60%)`, replRatio >= 60 ? 'success' : 'warning');
+    addTermLine(term, `   Real Return vs Inflation: <b>${realReturnVsInflation > 0 ? '+' : ''}${realReturnVsInflation.toFixed(1)}%</b>`, realReturnVsInflation > 0 ? 'success' : 'error');
+    addTermLine(term, '', 'info');
+
+    // ═══ 3. FUND SUSTAINABILITY ASSESSMENT ═══
+    addTermLine(term, '<b>🛡️ FUND SUSTAINABILITY ASSESSMENT</b>', 'ipec');
+    addTermLine(term, '────────────────────────────────', 'info');
+    if (depPt > 0) {
+      addTermLine(term, `   ✗ <b>FUND DEPLETES at Year ${(depPt/12).toFixed(1)}</b>`, 'error');
+      addTermLine(term, `     Post-retirement runway: <b>${drawdownYears.toFixed(1)} years</b>`, 'error');
+      const shortfall = Math.max(0, lifeExp - retirementAge - drawdownYears);
+      addTermLine(term, `     Shortfall period: <b>${shortfall.toFixed(0)} years without income</b>`, 'error');
+      addTermLine(term, `     This means the pensioner faces <b>${shortfall.toFixed(0)} years</b> with NO`, 'error');
+      addTermLine(term, `     pension income and must rely on family or NSSA safety net.`, 'error');
+    } else {
+      addTermLine(term, `   ✓ <b>FUND REMAINS SOLVENT</b> through the full projection period`, 'success');
+      addTermLine(term, `     Post-retirement runway: <b>${drawdownYears.toFixed(0)}+ years</b>`, 'success');
+      addTermLine(term, `     The fund can sustain payouts beyond life expectancy.`, 'success');
+    }
+    addTermLine(term, '', 'info');
+
+    // ═══ 4. ASSET ALLOCATION ANALYSIS ═══
+    addTermLine(term, '<b>📈 ASSET ALLOCATION ANALYSIS</b>', 'ipec');
+    addTermLine(term, '────────────────────────────────', 'info');
+    addTermLine(term, `   Equities: <b>${equityAlloc}%</b> | Bonds: <b>${bondAlloc}%</b> | Property: <b>${realEstateAlloc}%</b> | Cash: <b>${cashAlloc}%</b> | Gold: <b>${goldAlloc}%</b>`, 'data');
+    // Risk profile
+    const riskScore = equityAlloc * 3 + realEstateAlloc * 2 + goldAlloc * 2 + bondAlloc * 1 + cashAlloc * 0.5;
+    const riskLabel = riskScore > 250 ? 'Aggressive' : riskScore > 180 ? 'Growth' : riskScore > 120 ? 'Balanced' : 'Conservative';
+    addTermLine(term, `   Portfolio Risk Profile: <b>${riskLabel}</b> (score: ${riskScore.toFixed(0)}/300)`, 'data');
+    if (equityAlloc > 60) addTermLine(term, `   ⚠ Equities at ${equityAlloc}% exceeds IPEC 60% prudential limit`, 'warning');
+    if (cashAlloc > 25 && inflation > 10) addTermLine(term, `   ⚠ Cash at ${cashAlloc}% is eroding at ${inflation}% inflation — net loss of <b>${(inflation - 5).toFixed(0)}%</b>/yr`, 'warning');
+    if (goldAlloc < 5 && inflation > 15) addTermLine(term, `   ⚠ Gold at ${goldAlloc}% is too low for a ${inflation}% inflation environment`, 'warning');
+    if (goldAlloc >= 10) addTermLine(term, `   ✓ Gold allocation provides solid inflation hedge at ${goldAlloc}%`, 'success');
+    addTermLine(term, `   Gold Holdings: <b>${final.goldHoldings.toFixed(4)} oz</b> (${fmtCur(final.goldValue)})`, 'gold');
+    addTermLine(term, '', 'info');
+
+    // ═══ 5. SCENARIO-SPECIFIC INSIGHTS ═══
+    addTermLine(term, '<b>🔍 SCENARIO-SPECIFIC INSIGHTS</b>', 'ipec');
+    addTermLine(term, '────────────────────────────────', 'info');
+    if (presetKey === '2008crisis') {
+      addTermLine(term, '   <b>2008 HYPERINFLATION CRISIS MODEL</b>', 'error');
+      addTermLine(term, `   At 231% inflation, nominal values are meaningless.`, 'warning');
+      addTermLine(term, `   Real purchasing power falls <b>${(100 - (final.realBalance / Math.max(final.balance,1)) * 100).toFixed(0)}%</b> below nominal.`, 'error');
+      addTermLine(term, `   Key Lesson: Only gold-backed assets and USD-denominated`, 'gold');
+      addTermLine(term, `   instruments survived the 2008 crisis. Pension funds that`, 'info');
+      addTermLine(term, `   held >20% in gold preserved member value.`, 'gold');
+      addTermLine(term, `   IPEC now mandates diversification to prevent recurrence.`, 'ipec');
+    } else if (presetKey === 'covid2020') {
+      addTermLine(term, '   <b>COVID-19 PANDEMIC IMPACT MODEL</b>', 'warning');
+      addTermLine(term, `   At 350% inflation with volatile spikes, fund stability`, 'warning');
+      addTermLine(term, `   depends heavily on asset class diversification.`, 'info');
+      addTermLine(term, `   COVID reduced formal employment, cutting contributions.`, 'warning');
+      addTermLine(term, `   Funds with >30% equities recovered faster post-pandemic.`, 'success');
+      addTermLine(term, `   Consider: pandemic disruption provisions in fund rules.`, 'info');
+    } else if (presetKey === 'zig2024') {
+      addTermLine(term, '   <b>ZiG CURRENCY TRANSITION MODEL</b>', 'warning');
+      addTermLine(term, `   The ZiG introduction added FX conversion risk for all`, 'info');
+      addTermLine(term, `   pension funds previously denominated in ZWL or USD.`, 'info');
+      addTermLine(term, `   Current ZiG/USD: <b>${(simState.zigRate||27.5).toFixed(2)}</b> — ${(simState.zigRate||27.5) > 25 ? 'significant depreciation since launch' : 'relatively stable'}`, 'data');
+      addTermLine(term, `   Pension payouts in ZiG lose value as ZiG depreciates.`, 'warning');
+      addTermLine(term, `   Recommendation: Index payouts to USD purchasing power.`, 'success');
+    } else if (presetKey === 'nssa') {
+      addTermLine(term, '   <b>NSSA STATUTORY PENSION MODEL</b>', 'ipec');
+      addTermLine(term, `   NSSA provides baseline social security coverage only.`, 'info');
+      addTermLine(term, `   At $${monthlyPayout}/mo, NSSA payout covers <b>${(monthlyPayout / 350 * 100).toFixed(0)}%</b> of avg living costs.`, monthlyPayout >= 200 ? 'data' : 'warning');
+      addTermLine(term, `   This is a <b>safety net</b>, not a retirement income solution.`, 'warning');
+      addTermLine(term, `   Members MUST supplement with occupational pension funds.`, 'error');
+      addTermLine(term, `   Minimum recommended total savings: <b>$200+/mo</b> combined.`, 'info');
+    } else if (presetKey === 'stable') {
+      addTermLine(term, '   <b>STABLE GROWTH BASELINE MODEL</b>', 'success');
+      addTermLine(term, `   This represents the best-case scenario for Zimbabwe.`, 'info');
+      addTermLine(term, `   At 8% inflation with decreasing trend, real returns are`, 'data');
+      addTermLine(term, `   positive across most asset classes.`, 'success');
+      addTermLine(term, `   With $${totalContrib}/mo contributions over ${yearsToRetire} years,`, 'data');
+      addTermLine(term, `   compound growth is the primary wealth driver.`, 'success');
+      if (roi > 200) addTermLine(term, `   Investment returns (${roi.toFixed(0)}%) far exceed contributions — excellent.`, 'success');
+    } else {
+      addTermLine(term, '   <b>CUSTOM SCENARIO ANALYSIS</b>', 'data');
+      if (inflation > 100) addTermLine(term, `   ⚠ Hyperinflationary conditions detected (${inflation}%)`, 'error');
+      else if (inflation > 30) addTermLine(term, `   ⚠ High inflation environment (${inflation}%)`, 'warning');
+      else addTermLine(term, `   ✓ Moderate inflation environment (${inflation}%)`, 'success');
+    }
+    addTermLine(term, '', 'info');
+
+    // ═══ 6. CONTRIBUTION ADEQUACY ═══
+    addTermLine(term, '<b>💰 CONTRIBUTION ADEQUACY</b>', 'ipec');
+    addTermLine(term, '────────────────────────────────', 'info');
+    const neededMonthly = monthlyPayout * 12 * Math.max(0, lifeExp - retirementAge);
+    const projectedAtRetire = retData.balance;
+    const coverageRatio = neededMonthly > 0 ? (projectedAtRetire / neededMonthly * 100) : 0;
+    addTermLine(term, `   Total retirement income needed: <b>${fmtCur(neededMonthly)}</b>`, 'data');
+    addTermLine(term, `   Projected fund at retirement:   <b>${fmtCur(projectedAtRetire)}</b>`, 'data');
+    addTermLine(term, `   Coverage ratio: <b>${coverageRatio.toFixed(1)}%</b>`, coverageRatio >= 100 ? 'success' : coverageRatio >= 70 ? 'warning' : 'error');
+    if (coverageRatio < 100) {
+      const gap = neededMonthly - projectedAtRetire;
+      const additionalMonthly = yearsToRetire > 0 ? (gap / (yearsToRetire * 12)) : gap;
+      addTermLine(term, `   Funding gap: <b>${fmtCur(gap)}</b>`, 'error');
+      addTermLine(term, `   To close gap: increase contributions by <b>${fmtCur(additionalMonthly)}/mo</b>`, 'warning');
+    } else {
+      addTermLine(term, `   ✓ Contributions are adequate for projected retirement needs`, 'success');
+    }
+    addTermLine(term, '', 'info');
+
+    // ═══ 7. LONGEVITY RISK ═══
+    addTermLine(term, '<b>⏳ LONGEVITY RISK ANALYSIS</b>', 'ipec');
+    addTermLine(term, '────────────────────────────────', 'info');
+    const retirementYears = lifeExp - retirementAge;
+    addTermLine(term, `   Expected retirement duration: <b>${retirementYears} years</b>`, 'data');
+    addTermLine(term, `   WHO Zimbabwe life expectancy: <b>62 years</b>`, 'data');
+    if (lifeExp > 70) addTermLine(term, `   Your ${lifeExp}yr estimate is optimistic — plan for best case`, 'info');
+    if (depPt > 0 && drawdownYears < retirementYears) {
+      addTermLine(term, `   ✗ Fund lasts <b>${drawdownYears.toFixed(1)} of ${retirementYears} years</b> needed`, 'error');
+      addTermLine(term, `   Risk: <b>${(retirementYears - drawdownYears).toFixed(0)} years</b> of pension poverty`, 'error');
+    } else {
+      addTermLine(term, `   ✓ Fund covers full retirement duration`, 'success');
+    }
+    addTermLine(term, '', 'info');
+
+    // ═══ 8. ACTIONABLE RECOMMENDATIONS ═══
+    addTermLine(term, '<b>✅ ACTIONABLE RECOMMENDATIONS</b>', 'ipec');
+    addTermLine(term, '────────────────────────────────', 'info');
+    let recNum = 1;
+    if (totalContrib < 150) {
+      addTermLine(term, `   ${recNum++}. <b>INCREASE CONTRIBUTIONS</b>: $${totalContrib}/mo → target ≥$150/mo`, 'warning');
+      addTermLine(term, `      Advocate for employer match under Pension & Provident Funds Act`, 'info');
     }
     if (inflation > 50 && goldAlloc < 15) {
-      addTermLine(term, `GOLD HEDGE: With ${inflation}% inflation, increase Mosi oa Tunya Gold allocation from ${goldAlloc}% to 15-20%.`, 'gold');
-      addTermLine(term, `   → Gold coins preserve purchasing power per RBZ Exchange Control Directive`, 'info');
+      addTermLine(term, `   ${recNum++}. <b>INCREASE GOLD HEDGE</b>: Raise from ${goldAlloc}% to 15-20%`, 'gold');
+      addTermLine(term, `      At ${inflation}% inflation, gold preserves purchasing power`, 'info');
     }
-    if (equityAlloc > 60) addTermLine(term, `DIVERSIFY: ${equityAlloc}% equities exceeds IPEC prudential limit. Consider rebalancing.`, 'warning');
-    if (cashAlloc > 30 && inflation > 10) addTermLine(term, `REDUCE CASH: ${cashAlloc}% in money market losing value at ${inflation}% inflation. Shift to inflation-linked bonds.`, 'warning');
+    if (cashAlloc > 25 && inflation > 10) {
+      addTermLine(term, `   ${recNum++}. <b>REDUCE CASH</b>: ${cashAlloc}% in money market yields ~5% vs ${inflation}% inflation`, 'warning');
+      addTermLine(term, `      Shift to inflation-linked bonds or property`, 'info');
+    }
+    if (equityAlloc > 60) {
+      addTermLine(term, `   ${recNum++}. <b>REBALANCE EQUITIES</b>: ${equityAlloc}% exceeds IPEC 60% limit`, 'warning');
+    }
+    if (replRatio < 60) {
+      addTermLine(term, `   ${recNum++}. <b>CLOSE IPEC GAP</b>: ${replRatio.toFixed(1)}% replacement ratio is below 60% target`, 'warning');
+      addTermLine(term, `      Increase payout target or boost contributions`, 'info');
+    }
     if (depPt > 0) {
-      addTermLine(term, '', 'info'); addTermLine(term, 'CRITICAL: FUND DEPLETION RISK', 'error');
-      addTermLine(term, `   Solution 1: Increase total monthly contributions`, 'info');
-      addTermLine(term, `   Solution 2: Extend working years (delay retirement by 3-5 years)`, 'info');
-      addTermLine(term, `   Solution 3: Implement annuity-based drawdown (IPEC Directive 2/2020)`, 'info');
-      addTermLine(term, `   Solution 4: Increase gold allocation as inflation hedge`, 'gold');
-    } else { addTermLine(term, '', 'info'); addTermLine(term, 'Fund is sustainable — consider these optimizations:', 'success'); }
-    addTermLine(term, '', 'info'); addTermLine(term, 'ZIMBABWE-SPECIFIC STRATEGIES:', 'ipec');
+      addTermLine(term, `   ${recNum++}. <b>EXTEND WORKING YEARS</b>: Delay retirement by 3-5 years`, 'info');
+      addTermLine(term, `   ${recNum++}. <b>ANNUITY CONVERSION</b>: Convert to annuity per IPEC Directive 2/2020`, 'info');
+    }
+    if (realReturnVsInflation < 0) {
+      addTermLine(term, `   ${recNum++}. <b>PORTFOLIO UNDERPERFORMING</b>: Real return is negative (${realReturnVsInflation.toFixed(1)}%)`, 'error');
+      addTermLine(term, `      Shift allocation toward higher-return assets (equities, gold)`, 'info');
+    }
+    if (recNum === 1) {
+      addTermLine(term, `   ✓ No critical issues detected. Portfolio is well-positioned.`, 'success');
+    }
+    addTermLine(term, '', 'info');
+
+    // ═══ 9. ZIMBABWE-SPECIFIC STRATEGIES ═══
+    addTermLine(term, '<b>🇿🇼 ZIMBABWE-SPECIFIC STRATEGIES</b>', 'ipec');
+    addTermLine(term, '────────────────────────────────', 'info');
     addTermLine(term, `   • Multi-currency strategy (USD/ZiG/Gold) mitigates FX risk`, 'info');
     addTermLine(term, `   • Mosi oa Tunya Gold coins: LBMA-pegged store of value`, 'gold');
     addTermLine(term, `   • Regional diversification: invest in SADC pension markets`, 'info');
     addTermLine(term, `   • Lobby IPEC for inflation-indexed annuity regulations`, 'info');
     addTermLine(term, `   • Digital pension tracking via mobile to rebuild trust`, 'info');
+    addTermLine(term, `   • ZiG/USD at ~${(simState.zigRate||27.5).toFixed(1)}: index payouts to USD purchasing power`, 'data');
+    addTermLine(term, '', 'info');
+    addTermLine(term, '<b>═══════════════════════════════════════════════</b>', 'info');
+    addTermLine(term, `   Report generated: ${new Date().toLocaleString()}`, 'info');
+    addTermLine(term, '<b>═══════════════════════════════════════════════</b>', 'info');
   }
 
   function logDataSources() {
