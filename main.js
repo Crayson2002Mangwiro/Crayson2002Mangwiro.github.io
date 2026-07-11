@@ -1,5 +1,5 @@
 /* ================================================
-   PENSION FUND DIGITAL TWIN  EZIMBABWE (Enhanced v2)
+   PENSION FUND DIGITAL TWIN — ZIMBABWE (Enhanced v2)
    Full Simulation Engine with Innovation Challenge Features
    Live RBZ / IOBZ data, Draggable Output, IPEC Inline
    v2.4 - ZimRate v1 API Direct Integration (FIXED)
@@ -7,10 +7,10 @@
 (function () {
   'use strict';
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // MOSI OA TUNYA GOLD COIN DATA
   // RBZ: LBMA PM Fix + 5% premium, 1 troy oz 22-carat
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   const GOLD_DATA = {
     name: 'Mosi oa Tunya Gold Coin',
     description: '1 troy oz, 22-carat (91.67% pure gold)',
@@ -31,14 +31,14 @@
       { date: '2025-03-14', usd: 2890.00, event: 'Mar 2025' },
       { date: '2025-06-01', usd: 3050.00, event: 'Jun 2025 est.' },
     ],
-    currentPrice: 2890, // Updated baseline  ELBMA ~$2750 + 5% RBZ premium
+    currentPrice: 2890, // Updated baseline — LBMA ~$2750 + 5% RBZ premium
     annualAppreciation: 0.12, // ~12% per year (2022-2025 LBMA trend)
     zigConversion: 27.5, // Updated market rate ZiG per USD (mid-2025)
   };
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // ZiG HISTORICAL DATA (fallback for sparklines)
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   const ZIG_HISTORY = [
     { date: 'Apr 2024', rate: 13.56, event: 'ZiG Launch (RBZ)' },
     { date: 'May 2024', rate: 13.56 },
@@ -56,9 +56,9 @@
     { date: 'May 2025', rate: 27.50, event: 'Current est.' },
   ];
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // SCENARIO PRESETS
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   const PRESETS = {
     custom: null,
     '2008crisis': {
@@ -98,9 +98,9 @@
     },
   };
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // DOM REFERENCES
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   const $ = (id) => document.getElementById(id);
   const canvas = $('sim-canvas');
   const ctx = canvas.getContext('2d');
@@ -136,9 +136,9 @@
   vals.retirement = $('val-retirement');
   vals.inflation = $('val-inflation');
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // STATE
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   let simState = {
     running: false, animFrame: null, projectionData: [],
     currentStep: 0, challengeEvents: [],
@@ -146,9 +146,9 @@
     goldBasePrice: 2890, zigRate: 27.5,
   };
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // SLIDER SYNC
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   Object.keys(sliders).forEach(k => {
     if (sliders[k] && vals[k]) {
       sliders[k].addEventListener('input', () => { vals[k].textContent = sliders[k].value; });
@@ -189,9 +189,9 @@
     drawAllocChart();
   }
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // ALLOCATION DONUT CHART
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   function drawAllocChart() {
     const c = $('alloc-chart');
     if (!c) return;
@@ -220,9 +220,9 @@
     cx2d.fillText(total + '%', cx, cy + 5);
   }
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // TABS
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   document.querySelectorAll('.editor-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
@@ -240,9 +240,9 @@
     });
   });
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // CURRENCY & SETTINGS
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   $('select-currency').addEventListener('change', () => { simState.currency = $('select-currency').value; });
   $('setting-inflation-model').addEventListener('change', () => { simState.inflationModel = $('setting-inflation-model').value; });
   $('settings-gear').addEventListener('click', () => $('modal-overlay').classList.add('open'));
@@ -283,9 +283,9 @@
     });
   }
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // SCENARIO PRESETS
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   function applyPreset(key) {
     const p = PRESETS[key];
     if (!p) return;
@@ -320,9 +320,9 @@
     logTerminal(`Loaded preset: ${PRESETS[key].name}`, 'success', 'log');
   });
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // CANVAS RESIZE
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   function resizeCanvas() {
     const panel = $('right-panel');
     canvas.width = panel.clientWidth; canvas.height = panel.clientHeight;
@@ -333,9 +333,9 @@
   window.addEventListener('resize', resizeCanvas);
   requestAnimationFrame(resizeCanvas);
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // SIMULATION ENGINE
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   function getAssetAllocation() {
     const eq = parseInt(sliders.allocEquities.value), bo = parseInt(sliders.allocBonds.value),
           re = parseInt(sliders.allocRealestate.value), mo = parseInt(sliders.allocMoney.value),
@@ -415,9 +415,9 @@
     return data;
   }
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // DRAWING
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   const P = { top: 55, right: 35, bottom: 75, left: 75 };
 
   function drawGrid() {
@@ -432,8 +432,8 @@
     ctx.strokeStyle = 'rgba(148,163,184,0.35)'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(P.left, P.top); ctx.lineTo(P.left, h - P.bottom); ctx.lineTo(w - P.right, h - P.bottom); ctx.stroke();
     ctx.fillStyle = '#e2e8f0'; ctx.font = '700 11px "JetBrains Mono"'; ctx.textAlign = 'center';
-    ctx.fillText('Years ↁE, w/2, h - P.bottom + 38);
-    ctx.save(); ctx.translate(16, h/2); ctx.rotate(-Math.PI/2); ctx.fillText('Fund Balance ↁE, 0, 0); ctx.restore();
+    ctx.fillText('Years →', w/2, h - P.bottom + 38);
+    ctx.save(); ctx.translate(16, h/2); ctx.rotate(-Math.PI/2); ctx.fillText('Fund Balance →', 0, 0); ctx.restore();
     ctx.fillStyle = '#ffffff'; ctx.font = '700 14px "Plus Jakarta Sans"'; ctx.textAlign = 'center';
     ctx.fillText('Pension Fund Projection', w/2, 28);
   }
@@ -539,9 +539,9 @@
     }
   }
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // ANIMATION
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   function startSimulation() {
     if (simState.running) return;
     const data = computeProjection();
@@ -559,7 +559,7 @@
         simState.currentStep = totalSteps; simState.running = false;
         completeSimulation(data); return;
       }
-      updateStatusPanel(data[simState.currentStep], ' E);
+      updateStatusPanel(data[simState.currentStep], '—');
       drawProjection(data, simState.currentStep);
       simState.animFrame = requestAnimationFrame(animate);
     }
@@ -570,7 +570,7 @@
     const final = data[data.length - 1];
     const peak = Math.max(...data.map(d => d.balance));
     const depPt = data.findIndex(d => d.phase === 'drawdown' && d.balance <= 0);
-    const ytd = depPt > 0 ? (depPt / 12).toFixed(1) : '∁E;
+    const ytd = depPt > 0 ? (depPt / 12).toFixed(1) : '∞';
     const minFundingReq = parseInt(sliders.minFunding.value);
     const replRatio = parseInt(sliders.replacementRatio.value);
     updateStatusPanel(final, ytd); setStatus('Complete', 'status-complete'); drawProjection(data, data.length);
@@ -580,7 +580,7 @@
     logTerminal(`Final Nominal: ${fmtCur(final.balance)} | Real: ${fmtCur(final.realBalance)}`, 'data', 'log');
     logTerminal(`Gold Holdings: ${final.goldHoldings.toFixed(4)} oz (${fmtCur(final.goldValue)})`, 'gold', 'log');
     if (depPt > 0) logTerminal(`FUND DEPLETED at year ${ytd}`, 'error', 'log');
-    else logTerminal('✁EFund solvent through projection period.', 'success', 'log');
+    else logTerminal('✓ Fund solvent through projection period.', 'success', 'log');
 
     // ── Key Insights Summary in main log ──
     logTerminal('', 'info', 'log');
@@ -603,16 +603,16 @@
     // Sustainability verdict
     if (depPt > 0) {
       const shortfall = Math.max(0, _lifeExp - _retAge - _drawdownYrs);
-      logTerminal(`⚠ Fund lasts <b>${_drawdownYrs.toFixed(1)} years</b> post-retirement  E<b>${shortfall.toFixed(0)} year shortfall</b>`, 'error', 'log');
+      logTerminal(`⚠ Fund lasts <b>${_drawdownYrs.toFixed(1)} years</b> post-retirement — <b>${shortfall.toFixed(0)} year shortfall</b>`, 'error', 'log');
     } else {
-      logTerminal(`✁EFund sustains payouts for <b>${_drawdownYrs.toFixed(0)}+ years</b> post-retirement`, 'success', 'log');
+      logTerminal(`✓ Fund sustains payouts for <b>${_drawdownYrs.toFixed(0)}+ years</b> post-retirement`, 'success', 'log');
     }
 
     // Inflation impact
     logTerminal(`Inflation erosion: <b>${_erosion.toFixed(1)}%</b> of peak value | Real balance: ${fmtCur(final.realBalance)}`, _erosion > 50 ? 'error' : 'data', 'log');
 
     // Funding ratio
-    logTerminal(`Avg funding ratio: <b>${_avgFR.toFixed(1)}%</b> ${_avgFR >= 100 ? '✁E : '⚠'}`, _avgFR >= 100 ? 'success' : 'warning', 'log');
+    logTerminal(`Avg funding ratio: <b>${_avgFR.toFixed(1)}%</b> ${_avgFR >= 100 ? '✓' : '⚠'}`, _avgFR >= 100 ? 'success' : 'warning', 'log');
 
     // Coverage
     const _neededTotal = parseFloat(sliders.payout.value) * 12 * Math.max(0, _lifeExp - _retAge);
@@ -622,7 +622,7 @@
     // Contribution adequacy
     if (_totalC < 150) logTerminal(`⚠ Contributions ($${_totalC}/mo) below recommended $150/mo`, 'warning', 'log');
 
-    logTerminal('ↁESee <b>Recommendations</b> tab for full insights report', 'info', 'log');
+    logTerminal('→ See <b>Recommendations</b> tab for full insights report', 'info', 'log');
     logTerminal('══════════════════════════════════', 'info', 'log');
 
     generateIPECReport(data, minFundingReq, replRatio, depPt);
@@ -642,12 +642,12 @@
     stopSimulation();
     simState.projectionData = []; simState.currentStep = 0; simState.challengeEvents = [];
     $('status-balance').textContent = '$0'; $('status-payout').textContent = '$0';
-    $('status-inflation').textContent = '0%'; $('status-depletion').textContent = ' E;
-    $('status-funding-ratio').textContent = ' E;
+    $('status-inflation').textContent = '0%'; $('status-depletion').textContent = '—';
+    $('status-funding-ratio').textContent = '—';
     setStatus('Idle', 'status-idle');
-    $('ipec-badge').className = 'ipec-badge'; $('ipec-status-text').textContent = 'IPEC:  E;
+    $('ipec-badge').className = 'ipec-badge'; $('ipec-status-text').textContent = 'IPEC: —';
     const inlineIPEC = $('canvas-ipec-status');
-    if (inlineIPEC) { inlineIPEC.textContent = 'IPEC:  E; inlineIPEC.className = 'canvas-ipec-label'; }
+    if (inlineIPEC) { inlineIPEC.textContent = 'IPEC: —'; inlineIPEC.className = 'canvas-ipec-label'; }
     drawGrid(); logTerminal('Scenario reset.', 'info', 'log');
   }
 
@@ -655,16 +655,16 @@
   $('btn-stop').addEventListener('click', stopSimulation);
   $('btn-reset').addEventListener('click', resetSimulation);
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // INLINE IPEC STATUS + IPEC REPORT + RECOMMENDATIONS + PENSIONER VIEW
-  // (Unchanged from your original  Epreserved exactly)
-  // ══════════════════════════════════════════════╁E
+  // (Unchanged from your original — preserved exactly)
+  // ═══════════════════════════════════════════════
   function updateInlineIPEC(data, minFunding) {
     const el = $('canvas-ipec-status'); if (!el) return;
     const avgFR = data.reduce((s, d) => s + d.fundingRatio, 0) / data.length;
-    if (avgFR >= minFunding) { el.textContent = 'IPEC: Compliant ✁E; el.className = 'canvas-ipec-label compliant'; }
+    if (avgFR >= minFunding) { el.textContent = 'IPEC: Compliant ✓'; el.className = 'canvas-ipec-label compliant'; }
     else if (avgFR >= minFunding * 0.7) { el.textContent = 'IPEC: At Risk ⚠'; el.className = 'canvas-ipec-label warning'; }
-    else { el.textContent = 'IPEC: Non-Compliant ✁E; el.className = 'canvas-ipec-label danger'; }
+    else { el.textContent = 'IPEC: Non-Compliant ✗'; el.className = 'canvas-ipec-label danger'; }
   }
 
   function generateIPECReport(data, minFunding, replRatio, depPt) {
@@ -679,7 +679,7 @@
     addTermLine(term, '────────────────────────────────', 'info');
     addTermLine(term, `Min Funding Ratio Required: ${minFunding}%`, 'data');
     addTermLine(term, `Avg Funding Ratio Achieved: ${avgFundingRatio.toFixed(1)}%`, avgFundingRatio >= minFunding ? 'success' : 'error');
-    addTermLine(term, `${avgFundingRatio >= minFunding ? '✁ECOMPLIANT' : '✁ENON-COMPLIANT'} with IPEC SI 95/2014`, avgFundingRatio >= minFunding ? 'success' : 'error');
+    addTermLine(term, `${avgFundingRatio >= minFunding ? '✓ COMPLIANT' : '✗ NON-COMPLIANT'} with IPEC SI 95/2014`, avgFundingRatio >= minFunding ? 'success' : 'error');
     addTermLine(term, '', 'info');
     addTermLine(term, `Target Replacement Ratio: ${replRatio}%`, 'data');
     addTermLine(term, `Actual Replacement Ratio: ${actualReplRatio}%`, parseFloat(actualReplRatio) >= replRatio ? 'success' : 'warning');
@@ -687,8 +687,8 @@
     addTermLine(term, `Fund Balance at Retirement: ${fmtCur(retData.balance)}`, 'data');
     addTermLine(term, `Total Contributions: ${fmtCur(retData.totalContributions)}`, 'data');
     addTermLine(term, `Gold Hedge Value: ${fmtCur(retData.goldValue)} (${retData.goldHoldings.toFixed(4)} oz)`, 'gold');
-    if (depPt > 0) addTermLine(term, `WARNING: Fund depletes at year ${(depPt/12).toFixed(1)}  Efails sustainability test`, 'error');
-    else addTermLine(term, '✁EFund passes IPEC long-term sustainability test', 'success');
+    if (depPt > 0) addTermLine(term, `WARNING: Fund depletes at year ${(depPt/12).toFixed(1)} — fails sustainability test`, 'error');
+    else addTermLine(term, '✓ Fund passes IPEC long-term sustainability test', 'success');
   }
 
   function updateIPECBadge(data, minFunding) {
@@ -725,13 +725,13 @@
     const inflModel = simState.inflationModel;
     const presetKey = $('preset-select')?.value || 'custom';
 
-    // ══╁EHEADER ══╁E
-    addTermLine(term, '<b>══════════════════════════════════════════════╁E/b>', 'info');
+    // ═══ HEADER ═══
+    addTermLine(term, '<b>═══════════════════════════════════════════════</b>', 'info');
     addTermLine(term, '<b>   COMPREHENSIVE SIMULATION INSIGHTS REPORT</b>', 'success');
-    addTermLine(term, '<b>══════════════════════════════════════════════╁E/b>', 'info');
+    addTermLine(term, '<b>═══════════════════════════════════════════════</b>', 'info');
     addTermLine(term, '', 'info');
 
-    // ══╁E1. SCENARIO SUMMARY ══╁E
+    // ═══ 1. SCENARIO SUMMARY ═══
     addTermLine(term, '<b>📋 SCENARIO SUMMARY</b>', 'ipec');
     addTermLine(term, '────────────────────────────────', 'info');
     const scenarioName = PRESETS[presetKey]?.name || 'Custom Scenario';
@@ -743,7 +743,7 @@
     addTermLine(term, `   Monthly Payout Target: <b>${fmtCur(monthlyPayout)}</b>`, 'data');
     addTermLine(term, '', 'info');
 
-    // ══╁E2. KEY FINANCIAL METRICS ══╁E
+    // ═══ 2. KEY FINANCIAL METRICS ═══
     addTermLine(term, '<b>📊 KEY FINANCIAL METRICS</b>', 'ipec');
     addTermLine(term, '────────────────────────────────', 'info');
     addTermLine(term, `   Peak Fund Balance:       <b>${fmtCur(peak)}</b>`, 'success');
@@ -759,24 +759,24 @@
     addTermLine(term, `   Real Return vs Inflation: <b>${realReturnVsInflation > 0 ? '+' : ''}${realReturnVsInflation.toFixed(1)}%</b>`, realReturnVsInflation > 0 ? 'success' : 'error');
     addTermLine(term, '', 'info');
 
-    // ══╁E3. FUND SUSTAINABILITY ASSESSMENT ══╁E
-    addTermLine(term, '<b>🛡�E�EFUND SUSTAINABILITY ASSESSMENT</b>', 'ipec');
+    // ═══ 3. FUND SUSTAINABILITY ASSESSMENT ═══
+    addTermLine(term, '<b>🛡️ FUND SUSTAINABILITY ASSESSMENT</b>', 'ipec');
     addTermLine(term, '────────────────────────────────', 'info');
     if (depPt > 0) {
-      addTermLine(term, `   ✁E<b>FUND DEPLETES at Year ${(depPt/12).toFixed(1)}</b>`, 'error');
+      addTermLine(term, `   ✗ <b>FUND DEPLETES at Year ${(depPt/12).toFixed(1)}</b>`, 'error');
       addTermLine(term, `     Post-retirement runway: <b>${drawdownYears.toFixed(1)} years</b>`, 'error');
       const shortfall = Math.max(0, lifeExp - retirementAge - drawdownYears);
       addTermLine(term, `     Shortfall period: <b>${shortfall.toFixed(0)} years without income</b>`, 'error');
       addTermLine(term, `     This means the pensioner faces <b>${shortfall.toFixed(0)} years</b> with NO`, 'error');
       addTermLine(term, `     pension income and must rely on family or NSSA safety net.`, 'error');
     } else {
-      addTermLine(term, `   ✁E<b>FUND REMAINS SOLVENT</b> through the full projection period`, 'success');
+      addTermLine(term, `   ✓ <b>FUND REMAINS SOLVENT</b> through the full projection period`, 'success');
       addTermLine(term, `     Post-retirement runway: <b>${drawdownYears.toFixed(0)}+ years</b>`, 'success');
       addTermLine(term, `     The fund can sustain payouts beyond life expectancy.`, 'success');
     }
     addTermLine(term, '', 'info');
 
-    // ══╁E4. ASSET ALLOCATION ANALYSIS ══╁E
+    // ═══ 4. ASSET ALLOCATION ANALYSIS ═══
     addTermLine(term, '<b>📈 ASSET ALLOCATION ANALYSIS</b>', 'ipec');
     addTermLine(term, '────────────────────────────────', 'info');
     addTermLine(term, `   Equities: <b>${equityAlloc}%</b> | Bonds: <b>${bondAlloc}%</b> | Property: <b>${realEstateAlloc}%</b> | Cash: <b>${cashAlloc}%</b> | Gold: <b>${goldAlloc}%</b>`, 'data');
@@ -785,13 +785,13 @@
     const riskLabel = riskScore > 250 ? 'Aggressive' : riskScore > 180 ? 'Growth' : riskScore > 120 ? 'Balanced' : 'Conservative';
     addTermLine(term, `   Portfolio Risk Profile: <b>${riskLabel}</b> (score: ${riskScore.toFixed(0)}/300)`, 'data');
     if (equityAlloc > 60) addTermLine(term, `   ⚠ Equities at ${equityAlloc}% exceeds IPEC 60% prudential limit`, 'warning');
-    if (cashAlloc > 25 && inflation > 10) addTermLine(term, `   ⚠ Cash at ${cashAlloc}% is eroding at ${inflation}% inflation  Enet loss of <b>${(inflation - 5).toFixed(0)}%</b>/yr`, 'warning');
+    if (cashAlloc > 25 && inflation > 10) addTermLine(term, `   ⚠ Cash at ${cashAlloc}% is eroding at ${inflation}% inflation — net loss of <b>${(inflation - 5).toFixed(0)}%</b>/yr`, 'warning');
     if (goldAlloc < 5 && inflation > 15) addTermLine(term, `   ⚠ Gold at ${goldAlloc}% is too low for a ${inflation}% inflation environment`, 'warning');
-    if (goldAlloc >= 10) addTermLine(term, `   ✁EGold allocation provides solid inflation hedge at ${goldAlloc}%`, 'success');
+    if (goldAlloc >= 10) addTermLine(term, `   ✓ Gold allocation provides solid inflation hedge at ${goldAlloc}%`, 'success');
     addTermLine(term, `   Gold Holdings: <b>${final.goldHoldings.toFixed(4)} oz</b> (${fmtCur(final.goldValue)})`, 'gold');
     addTermLine(term, '', 'info');
 
-    // ══╁E5. SCENARIO-SPECIFIC INSIGHTS ══╁E
+    // ═══ 5. SCENARIO-SPECIFIC INSIGHTS ═══
     addTermLine(term, '<b>🔍 SCENARIO-SPECIFIC INSIGHTS</b>', 'ipec');
     addTermLine(term, '────────────────────────────────', 'info');
     if (presetKey === '2008crisis') {
@@ -813,7 +813,7 @@
       addTermLine(term, '   <b>ZiG CURRENCY TRANSITION MODEL</b>', 'warning');
       addTermLine(term, `   The ZiG introduction added FX conversion risk for all`, 'info');
       addTermLine(term, `   pension funds previously denominated in ZWL or USD.`, 'info');
-      addTermLine(term, `   Current ZiG/USD: <b>${(simState.zigRate||27.5).toFixed(2)}</b>  E${(simState.zigRate||27.5) > 25 ? 'significant depreciation since launch' : 'relatively stable'}`, 'data');
+      addTermLine(term, `   Current ZiG/USD: <b>${(simState.zigRate||27.5).toFixed(2)}</b> — ${(simState.zigRate||27.5) > 25 ? 'significant depreciation since launch' : 'relatively stable'}`, 'data');
       addTermLine(term, `   Pension payouts in ZiG lose value as ZiG depreciates.`, 'warning');
       addTermLine(term, `   Recommendation: Index payouts to USD purchasing power.`, 'success');
     } else if (presetKey === 'nssa') {
@@ -830,16 +830,16 @@
       addTermLine(term, `   positive across most asset classes.`, 'success');
       addTermLine(term, `   With $${totalContrib}/mo contributions over ${yearsToRetire} years,`, 'data');
       addTermLine(term, `   compound growth is the primary wealth driver.`, 'success');
-      if (roi > 200) addTermLine(term, `   Investment returns (${roi.toFixed(0)}%) far exceed contributions  Eexcellent.`, 'success');
+      if (roi > 200) addTermLine(term, `   Investment returns (${roi.toFixed(0)}%) far exceed contributions — excellent.`, 'success');
     } else {
       addTermLine(term, '   <b>CUSTOM SCENARIO ANALYSIS</b>', 'data');
       if (inflation > 100) addTermLine(term, `   ⚠ Hyperinflationary conditions detected (${inflation}%)`, 'error');
       else if (inflation > 30) addTermLine(term, `   ⚠ High inflation environment (${inflation}%)`, 'warning');
-      else addTermLine(term, `   ✁EModerate inflation environment (${inflation}%)`, 'success');
+      else addTermLine(term, `   ✓ Moderate inflation environment (${inflation}%)`, 'success');
     }
     addTermLine(term, '', 'info');
 
-    // ══╁E6. CONTRIBUTION ADEQUACY ══╁E
+    // ═══ 6. CONTRIBUTION ADEQUACY ═══
     addTermLine(term, '<b>💰 CONTRIBUTION ADEQUACY</b>', 'ipec');
     addTermLine(term, '────────────────────────────────', 'info');
     const neededMonthly = monthlyPayout * 12 * Math.max(0, lifeExp - retirementAge);
@@ -854,31 +854,31 @@
       addTermLine(term, `   Funding gap: <b>${fmtCur(gap)}</b>`, 'error');
       addTermLine(term, `   To close gap: increase contributions by <b>${fmtCur(additionalMonthly)}/mo</b>`, 'warning');
     } else {
-      addTermLine(term, `   ✁EContributions are adequate for projected retirement needs`, 'success');
+      addTermLine(term, `   ✓ Contributions are adequate for projected retirement needs`, 'success');
     }
     addTermLine(term, '', 'info');
 
-    // ══╁E7. LONGEVITY RISK ══╁E
+    // ═══ 7. LONGEVITY RISK ═══
     addTermLine(term, '<b>⏳ LONGEVITY RISK ANALYSIS</b>', 'ipec');
     addTermLine(term, '────────────────────────────────', 'info');
     const retirementYears = lifeExp - retirementAge;
     addTermLine(term, `   Expected retirement duration: <b>${retirementYears} years</b>`, 'data');
     addTermLine(term, `   WHO Zimbabwe life expectancy: <b>62 years</b>`, 'data');
-    if (lifeExp > 70) addTermLine(term, `   Your ${lifeExp}yr estimate is optimistic  Eplan for best case`, 'info');
+    if (lifeExp > 70) addTermLine(term, `   Your ${lifeExp}yr estimate is optimistic — plan for best case`, 'info');
     if (depPt > 0 && drawdownYears < retirementYears) {
-      addTermLine(term, `   ✁EFund lasts <b>${drawdownYears.toFixed(1)} of ${retirementYears} years</b> needed`, 'error');
+      addTermLine(term, `   ✗ Fund lasts <b>${drawdownYears.toFixed(1)} of ${retirementYears} years</b> needed`, 'error');
       addTermLine(term, `   Risk: <b>${(retirementYears - drawdownYears).toFixed(0)} years</b> of pension poverty`, 'error');
     } else {
-      addTermLine(term, `   ✁EFund covers full retirement duration`, 'success');
+      addTermLine(term, `   ✓ Fund covers full retirement duration`, 'success');
     }
     addTermLine(term, '', 'info');
 
-    // ══╁E8. ACTIONABLE RECOMMENDATIONS ══╁E
-    addTermLine(term, '<b>✁EACTIONABLE RECOMMENDATIONS</b>', 'ipec');
+    // ═══ 8. ACTIONABLE RECOMMENDATIONS ═══
+    addTermLine(term, '<b>✅ ACTIONABLE RECOMMENDATIONS</b>', 'ipec');
     addTermLine(term, '────────────────────────────────', 'info');
     let recNum = 1;
     if (totalContrib < 150) {
-      addTermLine(term, `   ${recNum++}. <b>INCREASE CONTRIBUTIONS</b>: $${totalContrib}/mo ↁEtarget ≥$150/mo`, 'warning');
+      addTermLine(term, `   ${recNum++}. <b>INCREASE CONTRIBUTIONS</b>: $${totalContrib}/mo → target ≥$150/mo`, 'warning');
       addTermLine(term, `      Advocate for employer match under Pension & Provident Funds Act`, 'info');
     }
     if (inflation > 50 && goldAlloc < 15) {
@@ -905,12 +905,12 @@
       addTermLine(term, `      Shift allocation toward higher-return assets (equities, gold)`, 'info');
     }
     if (recNum === 1) {
-      addTermLine(term, `   ✁ENo critical issues detected. Portfolio is well-positioned.`, 'success');
+      addTermLine(term, `   ✓ No critical issues detected. Portfolio is well-positioned.`, 'success');
     }
     addTermLine(term, '', 'info');
 
-    // ══╁E9. ZIMBABWE-SPECIFIC STRATEGIES ══╁E
-    addTermLine(term, '<b>�E�E ZIMBABWE-SPECIFIC STRATEGIES</b>', 'ipec');
+    // ═══ 9. ZIMBABWE-SPECIFIC STRATEGIES ═══
+    addTermLine(term, '<b>🇿🇼 ZIMBABWE-SPECIFIC STRATEGIES</b>', 'ipec');
     addTermLine(term, '────────────────────────────────', 'info');
     addTermLine(term, `   • Multi-currency strategy (USD/ZiG/Gold) mitigates FX risk`, 'info');
     addTermLine(term, `   • Mosi oa Tunya Gold coins: LBMA-pegged store of value`, 'gold');
@@ -919,9 +919,9 @@
     addTermLine(term, `   • Digital pension tracking via mobile to rebuild trust`, 'info');
     addTermLine(term, `   • ZiG/USD at ~${(simState.zigRate||27.5).toFixed(1)}: index payouts to USD purchasing power`, 'data');
     addTermLine(term, '', 'info');
-    addTermLine(term, '<b>══════════════════════════════════════════════╁E/b>', 'info');
+    addTermLine(term, '<b>═══════════════════════════════════════════════</b>', 'info');
     addTermLine(term, `   Report generated: ${new Date().toLocaleString()}`, 'info');
-    addTermLine(term, '<b>══════════════════════════════════════════════╁E/b>', 'info');
+    addTermLine(term, '<b>═══════════════════════════════════════════════</b>', 'info');
   }
 
   function logDataSources() {
@@ -929,16 +929,16 @@
     logTerminal('══════════════════════════════════', 'info', 'log');
     logTerminal('<b>VERIFIABLE DATA SOURCES</b>', 'ipec', 'log');
     logTerminal('────────────────────────────────', 'info', 'log');
-    logTerminal('ↁE<b>ZSE Equities (14%)</b>: ZSE All-Share Index historical avg  E<a href="https://www.zse.co.zw" target="_blank" style="color:#60a5fa">zse.co.zw</a>', 'data', 'log');
-    logTerminal('ↁE<b>Treasury Bonds (8%)</b>: RBZ Monetary Policy Statement 2024  E<a href="https://www.rbz.co.zw" target="_blank" style="color:#60a5fa">rbz.co.zw</a>', 'data', 'log');
-    logTerminal('ↁE<b>Real Estate (9%)</b>: IPEC Pension Fund Performance Reports  E<a href="https://www.ipec.co.zw" target="_blank" style="color:#60a5fa">ipec.co.zw</a>', 'data', 'log');
-    logTerminal('ↁE<b>Money Market (5%)</b>: RBZ Overnight Accommodation Rate  E<a href="https://www.rbz.co.zw" target="_blank" style="color:#60a5fa">rbz.co.zw</a>', 'data', 'log');
-    logTerminal('ↁE<b>Gold (12%)</b>: LBMA PM Fix + 5% (Mosi oa Tunya)  E<a href="https://www.lbma.org.uk" target="_blank" style="color:#d4a843">lbma.org.uk</a>', 'gold', 'log');
-    logTerminal('ↁE<b>ZiG/USD Rate</b>: RBZ Interbank via ZimRate API  E<a href="https://zimrate.statotec.com" target="_blank" style="color:#60a5fa">zimrate.statotec.com</a>', 'data', 'log');
-    logTerminal('ↁE<b>Life Expectancy</b>: WHO Global Health Observatory (Zimbabwe 2023: 62y)  E<a href="https://www.who.int/data/gho" target="_blank" style="color:#60a5fa">who.int</a>', 'data', 'log');
-    logTerminal('ↁE<b>Inflation</b>: ZIMSTAT Consumer Price Index  E<a href="https://www.zimstat.co.zw" target="_blank" style="color:#60a5fa">zimstat.co.zw</a>', 'data', 'log');
-    logTerminal('ↁE<b>IPEC Thresholds</b>: SI 95/2014 & Directive 2/2020  E<a href="https://www.ipec.co.zw" target="_blank" style="color:#60a5fa">ipec.co.zw</a>', 'ipec', 'log');
-    logTerminal('ↁE<b>NSSA Rates</b>: National Social Security Authority Act  E<a href="https://www.nssa.org.zw" target="_blank" style="color:#60a5fa">nssa.org.zw</a>', 'data', 'log');
+    logTerminal('→ <b>ZSE Equities (14%)</b>: ZSE All-Share Index historical avg — <a href="https://www.zse.co.zw" target="_blank" style="color:#60a5fa">zse.co.zw</a>', 'data', 'log');
+    logTerminal('→ <b>Treasury Bonds (8%)</b>: RBZ Monetary Policy Statement 2024 — <a href="https://www.rbz.co.zw" target="_blank" style="color:#60a5fa">rbz.co.zw</a>', 'data', 'log');
+    logTerminal('→ <b>Real Estate (9%)</b>: IPEC Pension Fund Performance Reports — <a href="https://www.ipec.co.zw" target="_blank" style="color:#60a5fa">ipec.co.zw</a>', 'data', 'log');
+    logTerminal('→ <b>Money Market (5%)</b>: RBZ Overnight Accommodation Rate — <a href="https://www.rbz.co.zw" target="_blank" style="color:#60a5fa">rbz.co.zw</a>', 'data', 'log');
+    logTerminal('→ <b>Gold (12%)</b>: LBMA PM Fix + 5% (Mosi oa Tunya) — <a href="https://www.lbma.org.uk" target="_blank" style="color:#d4a843">lbma.org.uk</a>', 'gold', 'log');
+    logTerminal('→ <b>ZiG/USD Rate</b>: RBZ Interbank via ZimRate API — <a href="https://zimrate.statotec.com" target="_blank" style="color:#60a5fa">zimrate.statotec.com</a>', 'data', 'log');
+    logTerminal('→ <b>Life Expectancy</b>: WHO Global Health Observatory (Zimbabwe 2023: 62y) — <a href="https://www.who.int/data/gho" target="_blank" style="color:#60a5fa">who.int</a>', 'data', 'log');
+    logTerminal('→ <b>Inflation</b>: ZIMSTAT Consumer Price Index — <a href="https://www.zimstat.co.zw" target="_blank" style="color:#60a5fa">zimstat.co.zw</a>', 'data', 'log');
+    logTerminal('→ <b>IPEC Thresholds</b>: SI 95/2014 & Directive 2/2020 — <a href="https://www.ipec.co.zw" target="_blank" style="color:#60a5fa">ipec.co.zw</a>', 'ipec', 'log');
+    logTerminal('→ <b>NSSA Rates</b>: National Social Security Authority Act — <a href="https://www.nssa.org.zw" target="_blank" style="color:#60a5fa">nssa.org.zw</a>', 'data', 'log');
     logTerminal('══════════════════════════════════', 'info', 'log');
   }
 
@@ -958,22 +958,22 @@
       const totalContrib = empContrib + erContrib; const yearsToRetire = Math.max(0, retAge - curAge);
       $('p-monthly-income').textContent = fmtCur(monthlyPayout);
       $('p-total-savings').textContent = fmtCur(retData.balance);
-      $('p-duration').textContent = depPt > 0 ? `${((depPt - retM) / 12).toFixed(0)} yrs` : '30+ yrs ✁E;
+      $('p-duration').textContent = depPt > 0 ? `${((depPt - retM) / 12).toFixed(0)} yrs` : '30+ yrs ✓';
       const healthCard = $('p-health-card');
       if (depPt > 0 && (depPt - retM) / 12 < 10) { $('p-health').textContent = '⚠ At Risk'; $('p-health-advice').textContent = 'Fund may not last through retirement.'; healthCard.className = 'pensioner-card red'; }
-      else if (depPt > 0) { $('p-health').textContent = '▲ Fair'; $('p-health-advice').textContent = 'Limited runway  Econsider increasing contributions.'; healthCard.className = 'pensioner-card orange'; }
-      else { $('p-health').textContent = '✁EHealthy'; $('p-health-advice').textContent = 'Fund is on a sustainable trajectory.'; healthCard.className = 'pensioner-card green'; }
+      else if (depPt > 0) { $('p-health').textContent = '▲ Fair'; $('p-health-advice').textContent = 'Limited runway — consider increasing contributions.'; healthCard.className = 'pensioner-card orange'; }
+      else { $('p-health').textContent = '✓ Healthy'; $('p-health-advice').textContent = 'Fund is on a sustainable trajectory.'; healthCard.className = 'pensioner-card green'; }
       const nominalBal = retData.balance; const realBal = retData.realBalance;
       const erosionPct = nominalBal > 0 ? ((nominalBal - realBal) / nominalBal * 100) : 0;
       $('p-nominal-balance').textContent = fmtCur(nominalBal); $('p-real-balance').textContent = fmtCur(realBal);
       $('p-erosion-pct').textContent = erosionPct.toFixed(1) + '%';
-      $('p-erosion-note').textContent = `At ${inflation}% annual inflation over ${yearsToRetire} years  E${fmtCur(nominalBal - realBal)} of purchasing power eroded.`;
+      $('p-erosion-note').textContent = `At ${inflation}% annual inflation over ${yearsToRetire} years — ${fmtCur(nominalBal - realBal)} of purchasing power eroded.`;
       const estSalary = empContrib > 0 ? empContrib / 0.09 : monthlyPayout / 0.65;
       const replRatio = estSalary > 0 ? (monthlyPayout / estSalary * 100) : 0;
       const ipecMet = replRatio >= 60;
       $('p-replacement-ratio').textContent = replRatio.toFixed(1) + '%';
       const ipecBadge = $('p-ipec-badge');
-      if (ipecBadge) { ipecBadge.textContent = ipecMet ? '✁ECOMPLIANT' : '✁EBELOW TARGET'; ipecBadge.className = 'pensioner-ipec-badge ' + (ipecMet ? 'ipec-compliant' : 'ipec-non-compliant'); }
+      if (ipecBadge) { ipecBadge.textContent = ipecMet ? '✓ COMPLIANT' : '✗ BELOW TARGET'; ipecBadge.className = 'pensioner-ipec-badge ' + (ipecMet ? 'ipec-compliant' : 'ipec-non-compliant'); }
       const ipecBar = $('p-ipec-bar');
       if (ipecBar) { ipecBar.style.width = Math.min(100, replRatio) + '%'; ipecBar.className = 'pensioner-progress-bar ' + (ipecMet ? 'bar-green' : replRatio >= 40 ? 'bar-orange' : 'bar-red'); }
       $('p-ipec-note').textContent = ipecMet ? `Your ${replRatio.toFixed(1)}% replacement ratio meets the IPEC 60% minimum.` : `${(60 - replRatio).toFixed(1)}% below IPEC minimum. Increase monthly contributions.`;
@@ -983,19 +983,19 @@
       if (fundingBar) { fundingBar.style.width = Math.min(100, fundingRatio / 2) + '%'; fundingBar.className = 'pensioner-progress-bar ' + (fundingRatio >= 100 ? 'bar-green' : fundingRatio >= 75 ? 'bar-orange' : 'bar-red'); }
       const zigRate = simState.zigRate || 25.3;
       let zigLevel, zigClass, zigNote;
-      if (zigRate < 15) { zigLevel = 'LOW'; zigClass = 'risk-low'; zigNote = `ZiG/USD at ${zigRate.toFixed(2)}  Erelatively stable.`; }
-      else if (zigRate < 30) { zigLevel = 'MODERATE'; zigClass = 'risk-moderate'; zigNote = `ZiG/USD at ${zigRate.toFixed(2)}  Emild devaluation pressure.`; }
-      else { zigLevel = 'ELEVATED'; zigClass = 'risk-high'; zigNote = `ZiG/USD at ${zigRate.toFixed(2)}  Esignificant devaluation risk.`; }
+      if (zigRate < 15) { zigLevel = 'LOW'; zigClass = 'risk-low'; zigNote = `ZiG/USD at ${zigRate.toFixed(2)} — relatively stable.`; }
+      else if (zigRate < 30) { zigLevel = 'MODERATE'; zigClass = 'risk-moderate'; zigNote = `ZiG/USD at ${zigRate.toFixed(2)} — mild devaluation pressure.`; }
+      else { zigLevel = 'ELEVATED'; zigClass = 'risk-high'; zigNote = `ZiG/USD at ${zigRate.toFixed(2)} — significant devaluation risk.`; }
       const zigBadgeEl = $('p-zig-risk-badge'); if (zigBadgeEl) { zigBadgeEl.textContent = zigLevel; zigBadgeEl.className = 'pensioner-risk-badge ' + zigClass; }
       const zigNoteEl = $('p-zig-risk-note'); if (zigNoteEl) zigNoteEl.textContent = zigNote;
       const allocation = getAssetAllocation(); const goldPct = Math.round(allocation.gold.weight * 100);
       const goldValAtRet = retData.goldValue || (retData.balance * allocation.gold.weight);
       const goldEl = $('p-gold-pct'); if (goldEl) { goldEl.textContent = goldPct + '% of fund'; goldEl.className = 'pensioner-gold-value ' + (goldPct >= 10 ? 'gold-good' : goldPct >= 5 ? 'gold-fair' : 'gold-low'); }
-      const goldNoteEl = $('p-gold-note'); if (goldNoteEl) goldNoteEl.textContent = `≁E${fmtCur(goldValAtRet)} in gold at retirement  E` + (goldPct >= 10 ? 'Good protection.' : goldPct >= 5 ? 'Partial hedge. Consider raising to ≥10%.' : 'Very low exposure.');
+      const goldNoteEl = $('p-gold-note'); if (goldNoteEl) goldNoteEl.textContent = `≈ ${fmtCur(goldValAtRet)} in gold at retirement — ` + (goldPct >= 10 ? 'Good protection.' : goldPct >= 5 ? 'Partial hedge. Consider raising to ≥10%.' : 'Very low exposure.');
       const alerts = [];
-      if (inflation >= 100) alerts.push({ cls: 'alert-critical', text: `Hyperinflation scenario (${inflation}%)  Eprioritise gold and USD-linked assets.` });
-      else if (inflation >= 25) alerts.push({ cls: 'alert-warn', text: `High inflation (${inflation}%)  Eincrease gold and property allocations.` });
-      else alerts.push({ cls: 'alert-ok', text: `Inflation at ${inflation}%  Emanageable. Maintain gold hedging.` });
+      if (inflation >= 100) alerts.push({ cls: 'alert-critical', text: `Hyperinflation scenario (${inflation}%) — prioritise gold and USD-linked assets.` });
+      else if (inflation >= 25) alerts.push({ cls: 'alert-warn', text: `High inflation (${inflation}%) — increase gold and property allocations.` });
+      else alerts.push({ cls: 'alert-ok', text: `Inflation at ${inflation}% — manageable. Maintain gold hedging.` });
       if (depPt > 0) { const depYrs = ((depPt - retM) / 12).toFixed(0); alerts.push({ cls: parseInt(depYrs) < 15 ? 'alert-critical' : 'alert-warn', text: `Fund lasts ${depYrs} years post-retirement.` }); }
       if (goldPct < 10) alerts.push({ cls: 'alert-warn', text: `Low gold allocation (${goldPct}%). Recommend ≥10%.` });
       if (!ipecMet) alerts.push({ cls: 'alert-critical', text: `IPEC gap: ${replRatio.toFixed(1)}% replacement ratio below 60% minimum.` });
@@ -1004,26 +1004,26 @@
       const alertsList = $('p-alerts-list'); if (alertsList) alertsList.innerHTML = alerts.map(a => `<li class="alert-item ${a.cls}">${a.text}</li>`).join('');
       const tips = [];
       tips.push('Verify your fund holds Mosi oa Tunya gold coin allocations per IPEC mandate.');
-      tips.push(`Your IPEC replacement ratio is ${replRatio.toFixed(1)}%  Etarget is 60 E5%.`);
+      tips.push(`Your IPEC replacement ratio is ${replRatio.toFixed(1)}% — target is 60–75%.`);
       tips.push('Confirm your pension fund is registered with IPEC at ipec.co.zw.');
       if (goldPct < 10) tips.push(`Increase gold allocation from ${goldPct}% to at least 10%.`);
       tips.push(`ZiG/USD is ~${zigRate.toFixed(2)}. Index payout expectations to USD purchasing power.`);
-      tips.push('NSSA contributions alone provide ~$30 E0/month at retirement. Supplement with occupational funds.');
+      tips.push('NSSA contributions alone provide ~$30–50/month at retirement. Supplement with occupational funds.');
       $('p-tips-list').innerHTML = tips.map(t => `<li>${t}</li>`).join('');
       if (noDataDiv) noDataDiv.style.display = 'none';
       if (tipsDiv) tipsDiv.style.display = '';
     } else {
       $('p-monthly-income').textContent = fmtCur(parseFloat(sliders.payout.value));
-      $('p-total-savings').textContent = ' E; $('p-duration').textContent = ' E;
-      $('p-health').textContent = ' E; $('p-health-advice').textContent = 'Run a simulation to see your pension health.';
+      $('p-total-savings').textContent = '—'; $('p-duration').textContent = '—';
+      $('p-health').textContent = '—'; $('p-health-advice').textContent = 'Run a simulation to see your pension health.';
       $('p-health-card').className = 'pensioner-card';
-      ['p-nominal-balance','p-real-balance','p-erosion-pct','p-replacement-ratio','p-funding-ratio'].forEach(id => { const el = $(id); if (el) el.textContent = ' E; });
-      const zigB = $('p-zig-risk-badge'); if (zigB) { zigB.textContent = ' E; zigB.className = 'pensioner-risk-badge'; }
-      const goldV = $('p-gold-pct'); if (goldV) { goldV.textContent = ' E; goldV.className = 'pensioner-gold-value'; }
-      const ipecBadge0 = $('p-ipec-badge'); if (ipecBadge0) { ipecBadge0.textContent = ' E; ipecBadge0.className = 'pensioner-ipec-badge'; }
+      ['p-nominal-balance','p-real-balance','p-erosion-pct','p-replacement-ratio','p-funding-ratio'].forEach(id => { const el = $(id); if (el) el.textContent = '—'; });
+      const zigB = $('p-zig-risk-badge'); if (zigB) { zigB.textContent = '—'; zigB.className = 'pensioner-risk-badge'; }
+      const goldV = $('p-gold-pct'); if (goldV) { goldV.textContent = '—'; goldV.className = 'pensioner-gold-value'; }
+      const ipecBadge0 = $('p-ipec-badge'); if (ipecBadge0) { ipecBadge0.textContent = '—'; ipecBadge0.className = 'pensioner-ipec-badge'; }
       const ipecBar0 = $('p-ipec-bar'); if (ipecBar0) { ipecBar0.style.width = '0%'; ipecBar0.className = 'pensioner-progress-bar'; }
       const fundBar0 = $('p-funding-bar'); if (fundBar0) { fundBar0.style.width = '0%'; fundBar0.className = 'pensioner-progress-bar'; }
-      ['p-ipec-note','p-erosion-note','p-zig-risk-note','p-gold-note'].forEach(id => { const el = $(id); if (el) el.textContent = ' E; });
+      ['p-ipec-note','p-erosion-note','p-zig-risk-note','p-gold-note'].forEach(id => { const el = $(id); if (el) el.textContent = '—'; });
       const alertsList0 = $('p-alerts-list'); if (alertsList0) alertsList0.innerHTML = '<li class="alert-item alert-info">Run a simulation first.</li>';
       $('p-tips-list').innerHTML = '<li>Run a simulation first to get personalised advice.</li>';
       if (noDataDiv) noDataDiv.style.display = '';
@@ -1032,9 +1032,9 @@
     $('pensioner-overlay').classList.add('open');
   }
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // HELPERS
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   function setStatus(t, c) { $('status-state').textContent = t; $('status-state').className = c; }
   function updateStatusPanel(d, ytd) {
     $('status-balance').textContent = fmtCur(d.balance); $('status-payout').textContent = '$' + parseFloat(sliders.payout.value);
@@ -1066,9 +1066,9 @@
     c.quadraticCurveTo(x,y+h,x,y+h-r); c.lineTo(x,y+r); c.quadraticCurveTo(x,y,x+r,y); c.closePath();
   }
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // DRAG HANDLE
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   function initDragHandle() {
     const handle = $('drag-handle'); const terminal = $('terminal-section');
     if (!handle || !terminal) return;
@@ -1081,18 +1081,18 @@
     document.addEventListener('touchend', () => { isDragging = false; });
   }
 
-  // ══════════════════════════════════════════════════════════════════╁E
-  //  ██╁E    ██╗██╗   ██╗███████╁E   ██████╁E █████╗ ████████╗███████╗███████╁E
-  //  ██╁E    ██║██║   ██║██╔════╁E   ██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔════╁E
-  //  ██╁E    ██║██║   ██║█████╁E     ██████╔╝███████║   ██╁E  █████╗  ███████╗
-  //  ██╁E    ██║╚██╁E██╔╝██╔══╝      ██╔══██╗██╔══██║   ██╁E  ██╔══╝  ╚════██║
-  //  ███████╗██╁E╚████╔╁E███████╗    ██╁E ██║██║  ██╁E  ██╁E  ███████╗███████║
-  //  ╚══════╝╚═╁E ╚═══╁E ╚══════╝    ╚═╁E ╚═╝╚═╝  ╚═╁E  ╚═╁E  ╚══════╝╚══════╝
+  // ═══════════════════════════════════════════════════════════════════
+  //  ██╗     ██╗██╗   ██╗███████╗    ██████╗  █████╗ ████████╗███████╗███████╗
+  //  ██║     ██║██║   ██║██╔════╝    ██╔══██╗██╔══██╗╚══██╔══╝██╔════╝██╔════╝
+  //  ██║     ██║██║   ██║█████╗      ██████╔╝███████║   ██║   █████╗  ███████╗
+  //  ██║     ██║╚██╗ ██╔╝██╔══╝      ██╔══██╗██╔══██║   ██║   ██╔══╝  ╚════██║
+  //  ███████╗██║ ╚████╔╝ ███████╗    ██║  ██║██║  ██║   ██║   ███████╗███████║
+  //  ╚══════╝╚═╝  ╚═══╝  ╚══════╝    ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚══════╝
   //
   //  FIXED: Now uses ZimRate v1 API directly (free, public, CORS-enabled)
   //  instead of the broken Replit backend proxy.
   //  API Docs: https://zimrate.statotec.com/docs
-  // ══════════════════════════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════════════════════════
 
   // Removed ZIMRATE_API reference
 
@@ -1142,7 +1142,7 @@
 
       let zigRate = null, goldUsd = null, dateLabel = new Date().toLocaleDateString();
 
-      // ══╁E1. ZiG / USD Rate ↁE#rc-zig, #rc-zig-meta ══╁E
+      // ═══ 1. ZiG / USD Rate → #rc-zig, #rc-zig-meta ═══
       let ratesData = null;
       if (rateRes.status === 'fulfilled' && rateRes.value.ok) {
         const json = await rateRes.value.json();
@@ -1165,7 +1165,7 @@
             let liveOpt = zigSelect.querySelector('option[data-live="1"]');
             if (!liveOpt) { liveOpt = document.createElement('option'); liveOpt.dataset.live = '1'; zigSelect.insertBefore(liveOpt, zigSelect.firstChild); }
             liveOpt.value = String(zigRate);
-            liveOpt.textContent = `${zigRate.toFixed(2)} ZiG/USD (Live Global  E${dateLabel})`;
+            liveOpt.textContent = `${zigRate.toFixed(2)} ZiG/USD (Live Global — ${dateLabel})`;
             liveOpt.selected = true;
           }
           const badge = $('zig-live-badge'); if (badge) badge.style.display = '';
@@ -1175,7 +1175,7 @@
         const meta = $('rc-zig-meta'); if (meta) { meta.textContent = 'Rate unavailable'; meta.className = 'rate-card-meta'; }
       }
 
-      // ══╁E2. Gold Coin (USD) ↁE#rc-gold, #rc-gold-meta ══╁E
+      // ═══ 2. Gold Coin (USD) → #rc-gold, #rc-gold-meta ═══
       if (goldUsdRes.status === 'fulfilled' && goldUsdRes.value.ok) {
         const json = await goldUsdRes.value.json();
         if (json && json.price) {
@@ -1205,13 +1205,13 @@
         const meta = $('rc-gold-meta'); if (meta) { meta.textContent = 'Unavailable'; meta.className = 'rate-card-meta'; }
       }
 
-      // ══╁E3. Gold in ZiG ↁE#rc-gold-zig ══╁E
+      // ═══ 3. Gold in ZiG → #rc-gold-zig ═══
       if (goldUsd && zigRate) {
         const el = $('rc-gold-zig');
         if (el) el.textContent = `ZiG ${(goldUsd * zigRate).toLocaleString(undefined, {maximumFractionDigits:0})}`;
       }
 
-      // ══╁E4. All Exchange Rates ↁE#idbz-rates-table ══╁E
+      // ═══ 4. All Exchange Rates → #idbz-rates-table ═══
       if (ratesData && zigRate) {
         // Build mock pairs against ZWG from USD base
         const pairs = ['EUR', 'GBP', 'ZAR', 'BWP'];
@@ -1227,7 +1227,7 @@
         renderIdbzTable(tableData, 'Global Exchange API');
       }
 
-      // ══╁E5. Sparkline Charts ══╁E
+      // ═══ 5. Sparkline Charts ═══
       setTimeout(() => {
         drawSparkline('zig-sparkline', ZIG_HISTORY, '#60a5fa', 'date', 'rate', '', ' ZiG');
         drawSparkline('gold-sparkline', GOLD_DATA.historicalPrices, '#d4a843', 'date', 'usd', '$', '');
@@ -1235,7 +1235,7 @@
         if (srcEl) { srcEl.textContent = `Source: Estimated Historical Context`; srcEl.className = 'rates-source-tag'; }
       }, 80);
 
-      // ══╁E6. Update header ══╁E
+      // ═══ 6. Update header ═══
       if (updatedEl) {
         updatedEl.textContent = `Updated: ${dateLabel}`;
         updatedEl.style.color = '';
@@ -1245,7 +1245,7 @@
 
     } catch (err) {
       console.error('[LiveRates] Error:', err);
-      if (updatedEl) { updatedEl.textContent = 'Error  Eretrying in 30s'; updatedEl.style.color = '#ef4444'; }
+      if (updatedEl) { updatedEl.textContent = 'Error — retrying in 30s'; updatedEl.style.color = '#ef4444'; }
       setTimeout(loadRatesData, 30000);
     }
   }
@@ -1260,7 +1260,7 @@
       const bg = i % 2 === 0 ? 'transparent' : 'rgba(148,163,184,0.06)';
       html += `<tr style="background:${bg}">
         <td>${pair}</td>
-        <td style="font-weight:600">${r.avg?.toFixed(4)||' E}</td>
+        <td style="font-weight:600">${r.avg?.toFixed(4)||'—'}</td>
       </tr>`;
     });
     html += '</tbody></table>';
@@ -1306,10 +1306,10 @@
     ctx2.strokeStyle = '#2a3550'; ctx2.lineWidth = 1; ctx2.stroke();
   }
 
-  // ══════════════════════════════════════════════╁E
-  // LIVE DATA  EfetchLiveRates for simulator settings
+  // ═══════════════════════════════════════════════
+  // LIVE DATA — fetchLiveRates for simulator settings
   // (Called on page load to update ZiG rate and gold price in settings)
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   async function fetchLiveRates() {
     try {
       const [rateRes, goldRes] = await Promise.allSettled([
@@ -1329,7 +1329,7 @@
             let liveOpt = zigSelect.querySelector('option[data-live="1"]');
             if (!liveOpt) { liveOpt = document.createElement('option'); liveOpt.dataset.live = '1'; zigSelect.insertBefore(liveOpt, zigSelect.firstChild); }
             liveOpt.value = String(rate);
-            liveOpt.textContent = `${rate.toFixed(2)} ZiG/USD  ELive Global (${new Date().toLocaleDateString()})`;
+            liveOpt.textContent = `${rate.toFixed(2)} ZiG/USD — Live Global (${new Date().toLocaleDateString()})`;
             liveOpt.selected = true;
           }
           const badge = $('zig-live-badge'); if (badge) badge.style.display = '';
@@ -1349,7 +1349,7 @@
             let liveOpt = goldSelect.querySelector('option[data-live="1"]');
             if (!liveOpt) { liveOpt = document.createElement('option'); liveOpt.dataset.live = '1'; goldSelect.insertBefore(liveOpt, goldSelect.firstChild); }
             liveOpt.value = String(price);
-            liveOpt.textContent = `$${Math.round(price).toLocaleString()}  ELive Spot`;
+            liveOpt.textContent = `$${Math.round(price).toLocaleString()} — Live Spot`;
             liveOpt.selected = true;
           }
           const badge = $('gold-live-badge'); if (badge) badge.style.display = '';
@@ -1357,13 +1357,13 @@
         }
       }
     } catch (err) {
-      logTerminal('Live rate fetch unavailable  Eusing defaults.', 'warning', 'log');
+      logTerminal('Live rate fetch unavailable — using defaults.', 'warning', 'log');
     }
   }
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // DARK / LIGHT MODE TOGGLE
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   (function initTheme() {
     const root = document.documentElement; const btn = $('theme-toggle');
     const moonIcon = $('theme-icon-moon'); const sunIcon = $('theme-icon-sun');
@@ -1375,9 +1375,9 @@
     if (btn) { btn.addEventListener('click', () => { const current = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; applyTheme(current); localStorage.setItem('pension-theme', current); }); }
   })();
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // INIT
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   drawGrid(); drawAllocChart(); updateAllocTotal(); initDragHandle();
 
   (function initDragStatus() {
@@ -1403,9 +1403,9 @@
   // Fetch live rates from ZimRate v1 API on page load
   setTimeout(fetchLiveRates, 800);
 
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   // ZAPF AI CHATBOT (Groq)
-  // ══════════════════════════════════════════════╁E
+  // ═══════════════════════════════════════════════
   const aiFab = $('zapf-ai-fab'); const aiWindow = $('zapf-ai-window');
   const aiClose = $('zapf-ai-close'); const aiMessages = $('zapf-ai-messages');
   const aiInput = $('zapf-ai-input'); const aiSend = $('zapf-ai-send');
